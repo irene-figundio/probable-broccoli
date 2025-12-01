@@ -1,0 +1,6 @@
+@WorkBotAI.API_HostAddress = http://localhost:5230
+
+GET {{WorkBotAI.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
