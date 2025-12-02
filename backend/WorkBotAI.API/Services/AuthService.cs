@@ -1,21 +1,20 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WorkBotAI.API.Data;
 using WorkBotAI.API.DTOs;
+using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Services;
 
 public class AuthService
 {
-    private readonly WorkBotAIContext _context;
+    private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
 
-    public AuthService(WorkBotAIContext context, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IConfiguration configuration)
     {
-        _context = context;
+        _userRepository = userRepository;
         _configuration = configuration;
     }
 
@@ -24,10 +23,7 @@ public class AuthService
         try
         {
             // Cerca l'utente nel database
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .Include(u => u.Tenant)
-                .FirstOrDefaultAsync(u => u.Mail == loginDto.Email);
+            var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
 
             if (user == null)
             {
