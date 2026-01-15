@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WorkbotAI.Models;
-using WorkBotAI.API.DTOs;
 
 namespace WorkBotAI.Repositories.DataAccess.Repositories.Interfaces
 {

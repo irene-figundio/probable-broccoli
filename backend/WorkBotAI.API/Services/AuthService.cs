@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using WorkbotAI.Models;
 using WorkBotAI.API.DTOs;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
@@ -86,7 +87,7 @@ public class AuthService
         }
     }
 
-    private string GenerateJwtToken(Models.User user)
+    private string GenerateJwtToken(User user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "WorkBotAI_SuperSecretKey_2024_MinLength32Characters!";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

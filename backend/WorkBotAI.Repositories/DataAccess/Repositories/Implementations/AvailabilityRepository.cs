@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
-using WorkBotAI.API.DTOs;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations

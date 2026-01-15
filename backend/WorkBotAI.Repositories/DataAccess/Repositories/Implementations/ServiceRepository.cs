@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
-using WorkBotAI.API.DTOs;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
@@ -20,6 +19,7 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
 
         public async Task<IEnumerable<ServiceListDto>> GetServicesAsync(Guid? tenantId, string search, int? categoryId)
         {
+
             var query = _context.Services
                 .Where(s => s.IsDeleted != true)
                 .Include(s => s.Tenant)
@@ -32,15 +32,15 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
                     Name = s.Name,
                     Description = s.Description,
                     CategoryName = s.Category != null ? s.Category.Name : null,
+                    CategoryId = s.CategoryId ?? 0,
                     DurationMin = s.DurationMin,
                     BasePrice = s.BasePrice,
                     IsActive = s.IsActive ?? true,
                     CreationTime = s.CreationTime,
                     AppointmentsCount = s.AppointmentServices.Count()
                 });
-
             if (tenantId.HasValue) query = query.Where(s => s.TenantId == tenantId.Value);
-            if (categoryId.HasValue) query = query.Where(s => s.CategoryId == categoryId.Value);
+            if (categoryId.HasValue) query = query.Where(s => s.CategoryId.Value == categoryId.Value);
             if (!string.IsNullOrEmpty(search)) query = query.Where(s => (s.Name != null && s.Name.Contains(search)) || (s.Description != null && s.Description.Contains(search)));
 
             return await query.OrderBy(s => s.Name).ToListAsync();

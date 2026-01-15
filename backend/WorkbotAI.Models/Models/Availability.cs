@@ -20,4 +20,5 @@ public partial class Availability
     public virtual Staff? Staff { get; set; }
 
     public virtual Tenant Tenant { get; set; } = null!;
+    public string StaffName { get; set; }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WorkBotAI.API.Data;
-using WorkBotAI.API.DTOs;
+using WorkbotAI.Models;
+using WorkBotAI.Repositories.DataAccess;
 
 namespace WorkBotAI.API.Controllers;
 

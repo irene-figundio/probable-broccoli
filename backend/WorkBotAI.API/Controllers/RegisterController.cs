@@ -38,7 +38,7 @@ public class RegisterController : ControllerBase
         if (!result.Success) return StatusCode(500, result);
         
         var user = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
-        var token = GenerateJwtToken(user, new Tenant { Id = result.TenantId, Name = dto.BusinessName });
+        var token = GenerateJwtToken(user, new Tenant { Id = (Guid)result.TenantId, Name = dto.BusinessName });
         result.Token = token;
 
         return Ok(result);
@@ -54,7 +54,7 @@ public class RegisterController : ControllerBase
 
     private string GenerateJwtToken(User user, Tenant tenant)
     {
-        var jwtKey = _configuration["Jwt:Key"] ?? "WorkBotAI_SuperSecretKey_2024_MinLength32Characters!";
+        var jwtKey = _configuration["Jwt:Key"] ?? "aee30e2c-73b5-4b87-9d9d-e28c7a326626A!wkr8vHmpUrJ784";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
