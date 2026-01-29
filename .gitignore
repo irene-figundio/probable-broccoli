@@ -52,3 +52,75 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+## =========================
+## Visual Studio
+## =========================
+.vs/
+*.user
+*.userosscache
+*.suo
+*.rsuser
+
+## =========================
+## Build results
+## =========================
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## =========================
+## Test results
+## =========================
+TestResults/
+*.trx
+
+## =========================
+## NuGet
+## =========================
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+!packages/build/
+
+## =========================
+## Rider / ReSharper
+## =========================
+_ReSharper*/
+*.DotSettings.user
+
+## =========================
+## Publish / Deploy
+## =========================
+publish/
+PublishProfiles/
+*.pubxml
+*.pubxml.user
+
+## =========================
+## ASP.NET / .NET
+## =========================
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+## =========================
+## SQL Server / LocalDB
+## =========================
+*.mdf
+*.ldf
+
+## =========================
+## OS files
+## =========================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+## =========================
+## Logs & temp
+## =========================
+*.log
+*.tmp
+*.temp
