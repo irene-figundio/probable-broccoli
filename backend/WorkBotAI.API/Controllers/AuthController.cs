@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.API.DTOs;
 using WorkBotAI.API.Services;
 
 namespace WorkBotAI.API.Controllers;
 
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
