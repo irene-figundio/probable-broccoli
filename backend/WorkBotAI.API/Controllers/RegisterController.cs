@@ -10,7 +10,8 @@ using WorkBotAI.API.DTOs;
 using WorkBotAI.API.Models;
 
 namespace WorkBotAI.API.Controllers;
-[Authorize]
+
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class RegisterController : ControllerBase
@@ -160,7 +161,7 @@ public class RegisterController : ControllerBase
             issuer: _configuration["Jwt:Issuer"] ?? "WorkBotAI",
             audience: _configuration["Jwt:Audience"] ?? "WorkBotAI",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials
         );
 
