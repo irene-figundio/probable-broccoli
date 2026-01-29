@@ -11,7 +11,7 @@ using WorkBotAI.API.Models;
 
 namespace WorkBotAI.API.Controllers;
 
-[AllowAnonymous]
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class RegisterController : ControllerBase
