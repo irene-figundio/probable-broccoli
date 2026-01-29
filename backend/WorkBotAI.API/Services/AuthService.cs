@@ -1,21 +1,21 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WorkbotAI.Models;
+using WorkBotAI.API.Data;
 using WorkBotAI.API.DTOs;
-using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Services;
 
 public class AuthService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly WorkBotAIContext _context;
     private readonly IConfiguration _configuration;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(WorkBotAIContext context, IConfiguration configuration)
     {
-        _userRepository = userRepository;
+        _context = context;
         _configuration = configuration;
     }
 
@@ -24,7 +24,10 @@ public class AuthService
         try
         {
             // Cerca l'utente nel database
-            var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
+                .FirstOrDefaultAsync(u => u.Mail == loginDto.Email);
 
             if (user == null)
             {
@@ -87,7 +90,7 @@ public class AuthService
         }
     }
 
-    private string GenerateJwtToken(User user)
+    private string GenerateJwtToken(Models.User user)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? "WorkBotAI_SuperSecretKey_2024_MinLength32Characters!";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

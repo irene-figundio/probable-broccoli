@@ -1,19 +1,98 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.API\\",
+  "WorkspaceRootPath": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\probable-broccoli\\backend\\workbotai.api\\models\\appointmentstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\tenantscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\tenantscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\tenantfaqcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\tenantfaqcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\tenantdashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\tenantdashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\systemsettingscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\systemsettingscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\subscriptionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\subscriptionscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\staffcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\staffcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\settingscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\settingscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\servicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\servicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\registercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\registercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\faqcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\faqcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\customerscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\customerscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\availabilitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\availabilitycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\appointmentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\appointmentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\analyticscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\analyticscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\data\\workbotaicontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:data\\workbotaicontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FEB50A1C-8346-43AE-B138-50E517C02803}|..\\WorkBotAI.Repositories\\WorkBotAI.Repositories.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.repositories\\dataaccess\\abstraction\\efrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\jules\\probable-broccoli\\backend\\workbotai.api\\models\\appointmentstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1A919069-FE7A-8463-4F4F-E237732A9872}|WorkBotAI.API.csproj|solutionrelative:models\\appointmentstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{58DBB57D-85AE-4A22-A53D-0C7D45C08086}|..\\WorkbotAI.Models\\WorkbotAI.Models.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\probable-broccoli\\backend\\workbotai.models\\models\\abstractions\\isoftdeletable.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{58DBB57D-85AE-4A22-A53D-0C7D45C08086}|..\\WorkbotAI.Models\\WorkbotAI.Models.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\probable-broccoli\\backend\\workbotai.models\\models\\abstractions\\ihasmodificationaudit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{FEB50A1C-8346-43AE-B138-50E517C02803}|..\\WorkBotAI.Repositories\\WorkBotAI.Repositories.csproj|c:\\progetti\\015 - workbot\\002 - refactoringwebapi\\probable-broccoli\\backend\\workbotai.repositories\\dataaccess\\abstraction\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -23,60 +102,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AppointmentStatus.cs",
-              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.API\\Models\\AppointmentStatus.cs",
-              "RelativeDocumentMoniker": "Models\\AppointmentStatus.cs",
-              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.API\\Models\\AppointmentStatus.cs",
-              "RelativeToolTip": "Models\\AppointmentStatus.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-01T18:18:26.485Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "..\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
-              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
-              "RelativeToolTip": "..\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-01T18:06:45.699Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "IHasModificationAudit.cs",
-              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
-              "RelativeDocumentMoniker": "..\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
-              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
-              "RelativeToolTip": "..\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-01T18:06:14.009Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "ISoftDeletable.cs",
-              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
-              "RelativeDocumentMoniker": "..\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
-              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
-              "RelativeToolTip": "..\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-01T18:05:33.915Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
@@ -90,12 +117,309 @@
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "Controllers\\UsersController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "Controllers\\UsersController.cs",
+              "ViewState": "AgIAAI8AAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:26.794Z",
+              "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TenantsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\TenantsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantsController.cs",
+              "RelativeToolTip": "Controllers\\TenantsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:23.604Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TenantFaqController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantFaqController.cs",
+              "RelativeDocumentMoniker": "Controllers\\TenantFaqController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantFaqController.cs",
+              "RelativeToolTip": "Controllers\\TenantFaqController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:20.884Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "TenantDashboardController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantDashboardController.cs",
+              "RelativeDocumentMoniker": "Controllers\\TenantDashboardController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\TenantDashboardController.cs",
+              "RelativeToolTip": "Controllers\\TenantDashboardController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:17.434Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SystemSettingsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SystemSettingsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\SystemSettingsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SystemSettingsController.cs",
+              "RelativeToolTip": "Controllers\\SystemSettingsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:12.67Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "SubscriptionsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SubscriptionsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\SubscriptionsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SubscriptionsController.cs",
+              "RelativeToolTip": "Controllers\\SubscriptionsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:21:00.49Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "StaffController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\StaffController.cs",
+              "RelativeDocumentMoniker": "Controllers\\StaffController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\StaffController.cs",
+              "RelativeToolTip": "Controllers\\StaffController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:57.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SettingsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SettingsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\SettingsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\SettingsController.cs",
+              "RelativeToolTip": "Controllers\\SettingsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:53.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "FaqController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\FaqController.cs",
+              "RelativeDocumentMoniker": "Controllers\\FaqController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\FaqController.cs",
+              "RelativeToolTip": "Controllers\\FaqController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:46.748Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "CustomersController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\CustomersController.cs",
+              "RelativeDocumentMoniker": "Controllers\\CustomersController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\CustomersController.cs",
+              "RelativeToolTip": "Controllers\\CustomersController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:43.345Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "AvailabilityController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AvailabilityController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AvailabilityController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AvailabilityController.cs",
+              "RelativeToolTip": "Controllers\\AvailabilityController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:39.632Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "AppointmentsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AppointmentsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AppointmentsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AppointmentsController.cs",
+              "RelativeToolTip": "Controllers\\AppointmentsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:35.483Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "RegisterController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\RegisterController.cs",
+              "RelativeDocumentMoniker": "Controllers\\RegisterController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\RegisterController.cs",
+              "RelativeToolTip": "Controllers\\RegisterController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:09:50.084Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ServicesController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\ServicesController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ServicesController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\ServicesController.cs",
+              "RelativeToolTip": "Controllers\\ServicesController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:18:45.046Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "AnalyticsController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AnalyticsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AnalyticsController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AnalyticsController.cs",
+              "RelativeToolTip": "Controllers\\AnalyticsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:29.638Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "AdminController.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AdminController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AdminController.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Controllers\\AdminController.cs",
+              "RelativeToolTip": "Controllers\\AdminController.cs",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-29T16:20:14.408Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T13:54:24.092Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "EfRepository.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\EfRepository.cs",
+              "RelativeDocumentMoniker": "..\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\EfRepository.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\EfRepository.cs",
+              "RelativeToolTip": "..\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\EfRepository.cs",
+              "ViewState": "AgIAACMAAAAAAAAAAAAAADAAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T09:30:01.75Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "WorkBotAIContext.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Data\\WorkBotAIContext.cs",
+              "RelativeDocumentMoniker": "Data\\WorkBotAIContext.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Data\\WorkBotAIContext.cs",
+              "RelativeToolTip": "Data\\WorkBotAIContext.cs",
+              "ViewState": "AgIAAFICAAAAAAAAAAAAAGcCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T09:24:28.43Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-27T09:22:05.001Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "AppointmentStatus.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Models\\AppointmentStatus.cs",
+              "RelativeDocumentMoniker": "Models\\AppointmentStatus.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\Jules\\probable-broccoli\\backend\\WorkBotAI.API\\Models\\AppointmentStatus.cs",
+              "RelativeToolTip": "Models\\AppointmentStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-01T18:18:26.485Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
+              "RelativeToolTip": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkBotAI.Repositories\\DataAccess\\Abstraction\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-01T18:06:45.699Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "IHasModificationAudit.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
+              "RelativeToolTip": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\IHasModificationAudit.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-01T18:06:14.009Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "ISoftDeletable.cs",
+              "DocumentMoniker": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
+              "ToolTip": "C:\\PROGETTI\\015 - WorkBot\\002 - RefactoringWebAPI\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
+              "RelativeToolTip": "..\\..\\..\\..\\probable-broccoli\\backend\\WorkbotAI.Models\\Models\\Abstractions\\ISoftDeletable.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-01T18:05:33.915Z"
             }
           ]
         }

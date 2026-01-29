@@ -1,22 +1,21 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WorkBotAI.API.Data;
 using WorkBotAI.API.DTOs;
-using WorkbotAI.Models;
-using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
-using System.Linq;
+using WorkBotAI.API.Models;
 
 namespace WorkBotAI.API.Controllers;
-
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AppointmentsController : ControllerBase
 {
-    private readonly IAppointmentRepository _appointmentRepository;
+    private readonly WorkBotAIContext _context;
 
-    public AppointmentsController(IAppointmentRepository appointmentRepository)
+    public AppointmentsController(WorkBotAIContext context)
     {
-        _appointmentRepository = appointmentRepository;
+        _context = context;
     }
 
     // GET: api/Appointments
@@ -27,36 +26,81 @@ public class AppointmentsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
-        var appointments = await _appointmentRepository.GetAppointmentsAsync(tenantId, statusId, fromDate, toDate);
+        var query = _context.Appointments
+            .Where(a => a.IsDeleted != true)
+            .Include(a => a.Tenant)
+            .Include(a => a.Customer)
+            .Include(a => a.Staff)
+            .Include(a => a.Status)
+            .Include(a => a.AppointmentServices)
+                .ThenInclude(asvc => asvc.Service)
+            .AsQueryable();
 
-        var appointmentDtos = appointments.Select(a => new AppointmentListDto
+        // Filtro per tenant
+        if (tenantId.HasValue)
         {
-            Id = a.Id,
-            TenantId = a.TenantId,
-            TenantName = a.Tenant.Name,
-            CustomerId = a.CustomerId,
-            CustomerName = a.Customer != null ? a.Customer.FullName : null,
-            StaffId = a.StaffId,
-            StaffName = a.Staff != null ? a.Staff.Name : null,
-            ServiceId = a.AppointmentServices.FirstOrDefault()?.ServiceId,
-            ServiceName = a.AppointmentServices.FirstOrDefault()?.Service?.Name,
-            TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
-            StatusId = a.StatusId,
-            StatusName = a.Status != null ? a.Status.Name : null,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime,
-            Note = a.Note,
-            IsActive = a.IsActive ?? false
-        });
+            query = query.Where(a => a.TenantId == tenantId.Value);
+        }
 
-        return Ok(new { success = true, data = appointmentDtos });
+        // Filtro per stato
+        if (statusId.HasValue)
+        {
+            query = query.Where(a => a.StatusId == statusId.Value);
+        }
+
+        // Filtro per data inizio
+        if (fromDate.HasValue)
+        {
+            query = query.Where(a => a.StartTime >= fromDate.Value);
+        }
+
+        // Filtro per data fine
+        if (toDate.HasValue)
+        {
+            query = query.Where(a => a.StartTime <= toDate.Value);
+        }
+
+        var appointments = await query
+            .OrderByDescending(a => a.StartTime)
+            .Select(a => new AppointmentListDto
+            {
+                Id = a.Id,
+                TenantId = a.TenantId,
+                TenantName = a.Tenant.Name,
+                CustomerId = a.CustomerId,
+                CustomerName = a.Customer != null ? a.Customer.FullName : null,
+                StaffId = a.StaffId,
+                StaffName = a.Staff != null ? a.Staff.Name : null,
+                ServiceId = a.AppointmentServices.FirstOrDefault() != null ? a.AppointmentServices.FirstOrDefault()!.ServiceId : null,
+                ServiceName = a.AppointmentServices.FirstOrDefault() != null && a.AppointmentServices.FirstOrDefault()!.Service != null 
+                    ? a.AppointmentServices.FirstOrDefault()!.Service!.Name : null,
+                TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
+                StatusId = a.StatusId,
+                StatusName = a.Status != null ? a.Status.Name : null,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Note = a.Note,
+                IsActive = a.IsActive ?? false
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, data = appointments });
     }
 
     // GET: api/Appointments/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<AppointmentDetailDto>> GetAppointment(int id)
     {
-        var appointment = await _appointmentRepository.GetAppointmentByIdAsync(id);
+        var appointment = await _context.Appointments
+            .Where(a => a.Id == id && a.IsDeleted != true)
+            .Include(a => a.Tenant)
+            .Include(a => a.Customer)
+            .Include(a => a.Staff)
+            .Include(a => a.Resource)
+            .Include(a => a.Status)
+            .Include(a => a.AppointmentServices)
+                .ThenInclude(asvc => asvc.Service)
+            .FirstOrDefaultAsync();
 
         if (appointment == null)
         {
@@ -101,6 +145,13 @@ public class AppointmentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> CreateAppointment(CreateAppointmentDto dto)
     {
+        // Verifica che il tenant esista
+        var tenant = await _context.Tenants.FindAsync(dto.TenantId);
+        if (tenant == null)
+        {
+            return BadRequest(new { success = false, error = "Tenant non trovato" });
+        }
+
         var appointment = new Appointment
         {
             TenantId = dto.TenantId,
@@ -116,20 +167,22 @@ public class AppointmentsController : ControllerBase
             IsDeleted = false
         };
 
-        var createdAppointment = await _appointmentRepository.CreateAppointmentAsync(appointment);
+        _context.Appointments.Add(appointment);
+        await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetAppointment), new { id = createdAppointment.Id }, new
+        return CreatedAtAction(nameof(GetAppointment), new { id = appointment.Id }, new
         {
             success = true,
             data = new AppointmentListDto
             {
-                Id = createdAppointment.Id,
-                TenantId = createdAppointment.TenantId,
-                StatusId = createdAppointment.StatusId,
-                StartTime = createdAppointment.StartTime,
-                EndTime = createdAppointment.EndTime,
-                Note = createdAppointment.Note,
-                IsActive = createdAppointment.IsActive ?? false
+                Id = appointment.Id,
+                TenantId = appointment.TenantId,
+                TenantName = tenant.Name,
+                StatusId = appointment.StatusId,
+                StartTime = appointment.StartTime,
+                EndTime = appointment.EndTime,
+                Note = appointment.Note,
+                IsActive = appointment.IsActive ?? false
             }
         });
     }
@@ -138,9 +191,9 @@ public class AppointmentsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAppointment(int id, UpdateAppointmentDto dto)
     {
-        var appointment = await _appointmentRepository.GetAppointmentByIdAsync(id);
+        var appointment = await _context.Appointments.FindAsync(id);
 
-        if (appointment == null)
+        if (appointment == null || appointment.IsDeleted == true)
         {
             return NotFound(new { success = false, error = "Appuntamento non trovato" });
         }
@@ -154,7 +207,7 @@ public class AppointmentsController : ControllerBase
         appointment.Note = dto.Note;
         appointment.LastModificationTime = DateTime.UtcNow;
 
-        await _appointmentRepository.UpdateAppointmentAsync(appointment);
+        await _context.SaveChangesAsync();
 
         return Ok(new { success = true, message = "Appuntamento aggiornato con successo" });
     }
@@ -163,7 +216,19 @@ public class AppointmentsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAppointment(int id)
     {
-        await _appointmentRepository.DeleteAppointmentAsync(id);
+        var appointment = await _context.Appointments.FindAsync(id);
+
+        if (appointment == null)
+        {
+            return NotFound(new { success = false, error = "Appuntamento non trovato" });
+        }
+
+        // Soft delete
+        appointment.IsDeleted = true;
+        appointment.DeletionTime = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
         return Ok(new { success = true, message = "Appuntamento eliminato con successo" });
     }
 
@@ -171,77 +236,139 @@ public class AppointmentsController : ControllerBase
     [HttpPut("{id}/change-status")]
     public async Task<IActionResult> ChangeStatus(int id, [FromQuery] int statusId)
     {
-        await _appointmentRepository.ChangeAppointmentStatusAsync(id, statusId);
-        return Ok(new { success = true, message = "Stato cambiato con successo" });
+        var appointment = await _context.Appointments.FindAsync(id);
+
+        if (appointment == null || appointment.IsDeleted == true)
+        {
+            return NotFound(new { success = false, error = "Appuntamento non trovato" });
+        }
+
+        var status = await _context.AppointmentStatuses.FindAsync(statusId);
+        if (status == null)
+        {
+            return BadRequest(new { success = false, error = "Stato non valido" });
+        }
+
+        appointment.StatusId = statusId;
+        appointment.LastModificationTime = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true, message = $"Stato cambiato in '{status.Name}'" });
     }
 
     // GET: api/Appointments/statuses
     [HttpGet("statuses")]
     public async Task<ActionResult> GetStatuses()
     {
-        var statuses = await _appointmentRepository.GetAppointmentStatusesAsync();
-        var statusDtos = statuses.Select(s => new AppointmentStatusDto
-        {
-            Id = s.Id,
-            Name = s.Name,
-            IsActive = s.IsActive ?? false
-        });
-        return Ok(new { success = true, data = statusDtos });
+        var statuses = await _context.AppointmentStatuses
+            .Where(s => s.IsActive == true)
+            .Select(s => new AppointmentStatusDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                IsActive = s.IsActive ?? false
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, data = statuses });
     }
 
     // GET: api/Appointments/today
     [HttpGet("today")]
     public async Task<ActionResult> GetTodayAppointments([FromQuery] Guid? tenantId = null)
     {
-        var appointments = await _appointmentRepository.GetTodayAppointmentsAsync(tenantId);
-        var appointmentDtos = appointments.Select(a => new AppointmentListDto
-        {
-            Id = a.Id,
-            TenantId = a.TenantId,
-            TenantName = a.Tenant.Name,
-            CustomerId = a.CustomerId,
-            CustomerName = a.Customer != null ? a.Customer.FullName : null,
-            StaffId = a.StaffId,
-            StaffName = a.Staff != null ? a.Staff.Name : null,
-            ServiceId = a.AppointmentServices.FirstOrDefault()?.ServiceId,
-            ServiceName = a.AppointmentServices.FirstOrDefault()?.Service?.Name,
-            TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
-            StatusId = a.StatusId,
-            StatusName = a.Status != null ? a.Status.Name : null,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime,
-            Note = a.Note,
-            IsActive = a.IsActive ?? false
-        });
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
 
-        return Ok(new { success = true, data = appointmentDtos, count = appointmentDtos.Count() });
+        var query = _context.Appointments
+            .Where(a => a.IsDeleted != true && a.StartTime >= today && a.StartTime < tomorrow)
+            .Include(a => a.Tenant)
+            .Include(a => a.Customer)
+            .Include(a => a.Staff)
+            .Include(a => a.Status)
+            .Include(a => a.AppointmentServices)
+                .ThenInclude(asvc => asvc.Service)
+            .AsQueryable();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(a => a.TenantId == tenantId.Value);
+        }
+
+        var appointments = await query
+            .OrderBy(a => a.StartTime)
+            .Select(a => new AppointmentListDto
+            {
+                Id = a.Id,
+                TenantId = a.TenantId,
+                TenantName = a.Tenant.Name,
+                CustomerId = a.CustomerId,
+                CustomerName = a.Customer != null ? a.Customer.FullName : null,
+                StaffId = a.StaffId,
+                StaffName = a.Staff != null ? a.Staff.Name : null,
+                ServiceId = a.AppointmentServices.FirstOrDefault() != null ? a.AppointmentServices.FirstOrDefault()!.ServiceId : null,
+                ServiceName = a.AppointmentServices.FirstOrDefault() != null && a.AppointmentServices.FirstOrDefault()!.Service != null 
+                    ? a.AppointmentServices.FirstOrDefault()!.Service!.Name : null,
+                TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
+                StatusId = a.StatusId,
+                StatusName = a.Status != null ? a.Status.Name : null,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Note = a.Note,
+                IsActive = a.IsActive ?? false
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, data = appointments, count = appointments.Count });
     }
 
     // GET: api/Appointments/week
     [HttpGet("week")]
     public async Task<ActionResult> GetWeekAppointments([FromQuery] Guid? tenantId = null)
     {
-        var appointments = await _appointmentRepository.GetWeekAppointmentsAsync(tenantId);
-        var appointmentDtos = appointments.Select(a => new AppointmentListDto
-        {
-            Id = a.Id,
-            TenantId = a.TenantId,
-            TenantName = a.Tenant.Name,
-            CustomerId = a.CustomerId,
-            CustomerName = a.Customer != null ? a.Customer.FullName : null,
-            StaffId = a.StaffId,
-            StaffName = a.Staff != null ? a.Staff.Name : null,
-            ServiceId = a.AppointmentServices.FirstOrDefault()?.ServiceId,
-            ServiceName = a.AppointmentServices.FirstOrDefault()?.Service?.Name,
-            TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
-            StatusId = a.StatusId,
-            StatusName = a.Status != null ? a.Status.Name : null,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime,
-            Note = a.Note,
-            IsActive = a.IsActive ?? false
-        });
+        var today = DateTime.Today;
+        var endOfWeek = today.AddDays(7);
 
-        return Ok(new { success = true, data = appointmentDtos, count = appointmentDtos.Count() });
+        var query = _context.Appointments
+            .Where(a => a.IsDeleted != true && a.StartTime >= today && a.StartTime < endOfWeek)
+            .Include(a => a.Tenant)
+            .Include(a => a.Customer)
+            .Include(a => a.Staff)
+            .Include(a => a.Status)
+            .Include(a => a.AppointmentServices)
+                .ThenInclude(asvc => asvc.Service)
+            .AsQueryable();
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(a => a.TenantId == tenantId.Value);
+        }
+
+        var appointments = await query
+            .OrderBy(a => a.StartTime)
+            .Select(a => new AppointmentListDto
+            {
+                Id = a.Id,
+                TenantId = a.TenantId,
+                TenantName = a.Tenant.Name,
+                CustomerId = a.CustomerId,
+                CustomerName = a.Customer != null ? a.Customer.FullName : null,
+                StaffId = a.StaffId,
+                StaffName = a.Staff != null ? a.Staff.Name : null,
+                ServiceId = a.AppointmentServices.FirstOrDefault() != null ? a.AppointmentServices.FirstOrDefault()!.ServiceId : null,
+                ServiceName = a.AppointmentServices.FirstOrDefault() != null && a.AppointmentServices.FirstOrDefault()!.Service != null 
+                    ? a.AppointmentServices.FirstOrDefault()!.Service!.Name : null,
+                TotalPrice = a.AppointmentServices.Sum(s => s.Service != null ? s.Service.BasePrice : 0),
+                StatusId = a.StatusId,
+                StatusName = a.Status != null ? a.Status.Name : null,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Note = a.Note,
+                IsActive = a.IsActive ?? false
+            })
+            .ToListAsync();
+
+        return Ok(new { success = true, data = appointments, count = appointments.Count });
     }
 }

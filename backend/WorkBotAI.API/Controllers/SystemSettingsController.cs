@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WorkbotAI.Models;
-using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.API.Data;
+using WorkBotAI.API.Models;
 
 namespace WorkBotAI.API.Controllers;
-
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class SystemSettingsController : ControllerBase

@@ -2,10 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.API.Data;
 using WorkBotAI.API.Services;
-using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
-using WorkBotAI.Repositories.DataAccess.Repositories.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,21 +13,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configurazione Database
-builder.Services.AddDbContext<WorkBotAIContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//builder.Services.AddDbContext<WorkBotAIContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registra Repositories
-builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<IFaqRepository, FaqRepository>();
-builder.Services.AddScoped<IRegisterRepository, RegisterRepository>();
-builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
-builder.Services.AddScoped<ISettingRepository, SettingRepository>();
-builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+builder.Services.AddDbContext<WorkBotAIContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
+
 
 // Registra AuthService
 builder.Services.AddScoped<AuthService>();
