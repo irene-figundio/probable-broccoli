@@ -4,7 +4,7 @@ using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Controllers;
 
-//[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin")]
 [ApiController]
 [Route("api/[controller]")]
 public class AdminController : ControllerBase

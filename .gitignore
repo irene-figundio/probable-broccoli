@@ -52,9 +52,3 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/CopilotIndices/17.14.1577.30250
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/DesignTimeBuild/.dtbcache.v2
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/FileContentIndex
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/v17/.suo
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/v17/DocumentLayout.backup.json
-/backend/WorkBotWebAPI/.vs/WorkBotWebAPI/v17/DocumentLayout.json
