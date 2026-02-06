@@ -66,14 +66,14 @@ public class RegisterController : ControllerBase
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim("userId", user.Id.ToString()),
-            new Claim("email", user.Mail ?? ""),
-            new Claim("role", "Owner"),
-            new Claim("isSuperAdmin", "false"),
-            new Claim("tenantId", tenant.Id.ToString()),
-            new Claim("tenantName", tenant.Name ?? "")
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Mail ?? string.Empty),
+            new Claim(ClaimTypes.Role, "Owner"),
+            new Claim("TenantId", tenant.Id.ToString()),
+            new Claim("TenantName", tenant.Name ?? ""),
+            new Claim("IsSuperAdmin", "false")
         };
 
         var token = new JwtSecurityToken(

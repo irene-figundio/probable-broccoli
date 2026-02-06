@@ -95,14 +95,23 @@ public class AuthService
 
         var isSuperAdmin = user.IsSuperAdmin == true || user.RoleId == 1;
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Mail ?? string.Empty),
-            new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
             new Claim("TenantId", user.TenantId?.ToString() ?? "0"),
             new Claim("IsSuperAdmin", isSuperAdmin.ToString())
         };
+
+        // Aggiungi il ruolo specifico dell'utente
+        var userRole = user.Role?.Name ?? "User";
+        claims.Add(new Claim(ClaimTypes.Role, userRole));
+
+        // Se è SuperAdmin e il ruolo non è già SuperAdmin, aggiungilo come ruolo aggiuntivo
+        if (isSuperAdmin && userRole != "SuperAdmin")
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "SuperAdmin"));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"] ?? "WorkBotAI",
