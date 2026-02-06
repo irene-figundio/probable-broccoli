@@ -25,34 +25,41 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
             int page,
             int pageSize)
         {
-            var query = _context.SystemLogs.AsQueryable();
+            try
+            {
+                var query = _context.SystemLogs.AsQueryable();
 
-            if (!string.IsNullOrEmpty(level) && level != "all")
-                query = query.Where(l => l.Level.ToLower() == level.ToLower());
+                if (!string.IsNullOrEmpty(level) && level != "all")
+                    query = query.Where(l => l.Level.ToLower() == level.ToLower());
 
-            if (startDate.HasValue)
-                query = query.Where(l => l.Timestamp >= startDate.Value);
+                if (startDate.HasValue)
+                    query = query.Where(l => l.Timestamp >= startDate.Value);
 
-            if (endDate.HasValue)
-                query = query.Where(l => l.Timestamp <= endDate.Value.AddDays(1));
+                if (endDate.HasValue)
+                    query = query.Where(l => l.Timestamp <= endDate.Value.AddDays(1));
 
-            if (tenantId.HasValue)
-                query = query.Where(l => l.TenantId == tenantId.Value);
+                if (tenantId.HasValue)
+                    query = query.Where(l => l.TenantId == tenantId.Value);
 
-            if (!string.IsNullOrEmpty(searchTerm))
-                query = query.Where(l =>
-                    l.Message.Contains(searchTerm) ||
-                    l.Source.Contains(searchTerm) ||
-                    (l.Context != null && l.Context.Contains(searchTerm)));
+                if (!string.IsNullOrEmpty(searchTerm))
+                    query = query.Where(l =>
+                        l.Message.Contains(searchTerm) ||
+                        l.Source.Contains(searchTerm) ||
+                        (l.Context != null && l.Context.Contains(searchTerm)));
 
-            var totalCount = await query.CountAsync();
-            var logs = await query
-                .OrderByDescending(l => l.Timestamp)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                var totalCount = await query.CountAsync();
+                var logs = await query
+                    .OrderByDescending(l => l.Timestamp)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
 
-            return (logs, totalCount);
+                return (logs, totalCount);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                return (new List<SystemLog>(), 0);
+            }
         }
 
         public async Task<SystemLog?> GetLogByIdAsync(int id)
@@ -92,34 +99,46 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
             var today = DateTime.UtcNow.Date;
             var weekAgo = today.AddDays(-7);
 
-            // Handle empty table gracefully
-            var totalLogs = await _context.SystemLogs.CountAsync();
-            if (totalLogs == 0)
+            try
             {
+                // Handle empty table gracefully
+                var totalLogs = await _context.SystemLogs.CountAsync();
+                if (totalLogs == 0)
+                {
+                    return GetEmptyStats();
+                }
+
                 return new
                 {
-                    totalLogs = 0,
-                    todayLogs = 0,
-                    weekLogs = 0,
-                    errorCount = 0,
-                    warningCount = 0,
-                    infoCount = 0,
-                    byLevel = new List<object>()
+                    totalLogs,
+                    todayLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= today),
+                    weekLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= weekAgo),
+                    errorCount = await _context.SystemLogs.CountAsync(l => l.Level == "error"),
+                    warningCount = await _context.SystemLogs.CountAsync(l => l.Level == "warning"),
+                    infoCount = await _context.SystemLogs.CountAsync(l => l.Level == "info"),
+                    byLevel = await _context.SystemLogs
+                        .GroupBy(l => l.Level)
+                        .Select(g => new { level = g.Key, count = g.Count() })
+                        .ToListAsync()
                 };
             }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                return GetEmptyStats();
+            }
+        }
 
+        private object GetEmptyStats()
+        {
             return new
             {
-                totalLogs,
-                todayLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= today),
-                weekLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= weekAgo),
-                errorCount = await _context.SystemLogs.CountAsync(l => l.Level == "error"),
-                warningCount = await _context.SystemLogs.CountAsync(l => l.Level == "warning"),
-                infoCount = await _context.SystemLogs.CountAsync(l => l.Level == "info"),
-                byLevel = await _context.SystemLogs
-                    .GroupBy(l => l.Level)
-                    .Select(g => new { level = g.Key, count = g.Count() })
-                    .ToListAsync()
+                totalLogs = 0,
+                todayLogs = 0,
+                weekLogs = 0,
+                errorCount = 0,
+                warningCount = 0,
+                infoCount = 0,
+                byLevel = new List<object>()
             };
         }
     }

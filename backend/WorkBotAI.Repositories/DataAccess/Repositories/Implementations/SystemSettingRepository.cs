@@ -19,25 +19,46 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
         public async Task<IEnumerable<SystemSetting>> GetAllSettingsAsync()
         {
             await EnsureDefaultSettingsAsync();
-            return await _context.SystemSettings
-                .OrderBy(s => s.Category)
-                .ThenBy(s => s.Key)
-                .ToListAsync();
+            try
+            {
+                return await _context.SystemSettings
+                    .OrderBy(s => s.Category)
+                    .ThenBy(s => s.Key)
+                    .ToListAsync();
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                return new List<SystemSetting>();
+            }
         }
 
         public async Task<IEnumerable<SystemSetting>> GetByCategoryAsync(string category)
         {
             await EnsureDefaultSettingsAsync();
-            return await _context.SystemSettings
-                .Where(s => s.Category == category)
-                .ToListAsync();
+            try
+            {
+                return await _context.SystemSettings
+                    .Where(s => s.Category == category)
+                    .ToListAsync();
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                return new List<SystemSetting>();
+            }
         }
 
         public async Task<SystemSetting?> GetSettingAsync(string category, string key)
         {
             await EnsureDefaultSettingsAsync();
-            return await _context.SystemSettings
-                .FirstOrDefaultAsync(s => s.Category == category && s.Key == key);
+            try
+            {
+                return await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Category == category && s.Key == key);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                return null;
+            }
         }
 
         public async Task UpdateSettingsAsync(Dictionary<string, Dictionary<string, string?>> settings)
