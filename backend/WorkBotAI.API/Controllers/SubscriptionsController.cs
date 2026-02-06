@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
-using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -9,300 +9,324 @@ namespace WorkBotAI.API.Controllers;
 [Route("api/[controller]")]
 public class SubscriptionsController : ControllerBase
 {
-    private readonly WorkBotAIContext _context;
+    private readonly ISubscriptionRepository _repository;
+    private readonly ILogger<SubscriptionsController> _logger;
 
-    public SubscriptionsController(WorkBotAIContext context)
+    public SubscriptionsController(ISubscriptionRepository repository, ILogger<SubscriptionsController> logger)
     {
-        _context = context;
+        _repository = repository;
+        _logger = logger;
     }
 
     // GET: api/Subscriptions
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SubscriptionListDto>>> GetSubscriptions([FromQuery] Guid? tenantId = null, [FromQuery] int? statusId = null)
+    public async Task<ActionResult> GetSubscriptions([FromQuery] Guid? tenantId = null, [FromQuery] int? statusId = null)
     {
-        var query = _context.Subscriptions
-            .Include(s => s.Tenant)
-            .Include(s => s.Plane)
-            .Include(s => s.Status)
-            .AsQueryable();
-
-        // Filtro per tenant
-        if (tenantId.HasValue)
+        try
         {
-            query = query.Where(s => s.TenantId == tenantId.Value);
-        }
+            var subscriptions = await _repository.GetSubscriptionsAsync(tenantId, statusId);
 
-        // Filtro per stato
-        if (statusId.HasValue)
-        {
-            query = query.Where(s => s.StatusId == statusId.Value);
-        }
-
-        var subscriptions = await query
-            .OrderByDescending(s => s.StartDate)
-            .Select(s => new SubscriptionListDto
+            var result = subscriptions.Select(s => new SubscriptionListDto
             {
                 Id = s.Id,
                 TenantId = s.TenantId,
                 TenantName = s.Tenant.Name,
                 TenantAcronym = s.Tenant.Acronym,
                 PlaneId = s.PlaneId,
-                PlaneName = s.Plane != null ? s.Plane.Name : null,
+                PlaneName = s.Plane?.Name,
                 StatusId = s.StatusId,
-                StatusName = s.Status != null ? s.Status.Name : null,
+                StatusName = s.Status?.Name,
                 StartDate = s.StartDate,
                 EndDate = s.EndDate
-            })
-            .ToListAsync();
+            });
 
-        return Ok(new { success = true, data = subscriptions });
+            return Ok(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero degli abbonamenti");
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // GET: api/Subscriptions/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<SubscriptionDetailDto>> GetSubscription(int id)
+    public async Task<ActionResult> GetSubscription(int id)
     {
-        var subscription = await _context.Subscriptions
-            .Where(s => s.Id == id)
-            .Include(s => s.Tenant)
-            .Include(s => s.Plane)
-            .Include(s => s.Status)
-            .Include(s => s.Payments)
-            .FirstOrDefaultAsync();
-
-        if (subscription == null)
+        try
         {
-            return NotFound(new { success = false, error = "Abbonamento non trovato" });
+            var subscription = await _repository.GetSubscriptionByIdAsync(id);
+
+            if (subscription == null)
+            {
+                return NotFound(new { success = false, error = "NOT_FOUND" });
+            }
+
+            var result = new SubscriptionDetailDto
+            {
+                Id = subscription.Id,
+                TenantId = subscription.TenantId,
+                TenantName = subscription.Tenant.Name,
+                TenantAcronym = subscription.Tenant.Acronym,
+                PlaneId = subscription.PlaneId,
+                PlaneName = subscription.Plane?.Name,
+                PlaneDescription = subscription.Plane?.Description,
+                StatusId = subscription.StatusId,
+                StatusName = subscription.Status?.Name,
+                StartDate = subscription.StartDate,
+                EndDate = subscription.EndDate,
+                TotalPayments = subscription.Payments.Count,
+                TotalPaid = subscription.Payments.Sum(p => p.ImportValue ?? 0)
+            };
+
+            return Ok(new { success = true, data = result });
         }
-
-        var result = new SubscriptionDetailDto
+        catch (Exception ex)
         {
-            Id = subscription.Id,
-            TenantId = subscription.TenantId,
-            TenantName = subscription.Tenant.Name,
-            TenantAcronym = subscription.Tenant.Acronym,
-            PlaneId = subscription.PlaneId,
-            PlaneName = subscription.Plane?.Name,
-            PlaneDescription = subscription.Plane?.Description,
-            StatusId = subscription.StatusId,
-            StatusName = subscription.Status?.Name,
-            StartDate = subscription.StartDate,
-            EndDate = subscription.EndDate,
-            TotalPayments = subscription.Payments.Count,
-            TotalPaid = subscription.Payments.Sum(p => p.ImportValue ?? 0)
-        };
-
-        return Ok(new { success = true, data = result });
+            _logger.LogError(ex, "Errore nel recupero dell'abbonamento {Id}", id);
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // POST: api/Subscriptions
     [HttpPost]
     public async Task<ActionResult> CreateSubscription(CreateSubscriptionDto dto)
     {
-        // Verifica che il tenant esista
-        var tenant = await _context.Tenants.FindAsync(dto.TenantId);
-        if (tenant == null)
+        try
         {
-            return BadRequest(new { success = false, error = "Tenant non trovato" });
-        }
+            // Validazione input base
+            if (dto.TenantId == Guid.Empty) return BadRequest(new { success = false, error = "INVALID_TENANT_ID" });
+            if (dto.PlaneId <= 0) return BadRequest(new { success = false, error = "INVALID_PLANE_ID" });
 
-        // Verifica che il piano esista
-        var plane = await _context.Planes.FindAsync(dto.PlaneId);
-        if (plane == null)
-        {
-            return BadRequest(new { success = false, error = "Piano non trovato" });
-        }
-
-        // Disattiva eventuali abbonamenti attivi precedenti
-        var activeSubscriptions = await _context.Subscriptions
-            .Where(s => s.TenantId == dto.TenantId && s.Status != null && s.Status.Name == "active")
-            .ToListAsync();
-
-        foreach (var sub in activeSubscriptions)
-        {
-            sub.StatusId = 3; // expired
-        }
-
-        var subscription = new Subscription
-        {
-            TenantId = dto.TenantId,
-            PlaneId = dto.PlaneId,
-            StatusId = dto.StatusId,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate
-        };
-
-        _context.Subscriptions.Add(subscription);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, new
-        {
-            success = true,
-            data = new SubscriptionListDto
+            // Verifica che il piano esista
+            var plane = await _repository.GetPlaneByIdAsync(dto.PlaneId);
+            if (plane == null)
             {
-                Id = subscription.Id,
-                TenantId = subscription.TenantId,
-                TenantName = tenant.Name,
-                PlaneId = subscription.PlaneId,
-                PlaneName = plane.Name,
-                StatusId = subscription.StatusId,
-                StartDate = subscription.StartDate,
-                EndDate = subscription.EndDate
+                return BadRequest(new { success = false, error = "PLANE_NOT_FOUND" });
             }
-        });
+
+            // Disattiva eventuali abbonamenti attivi precedenti
+            await _repository.DeactivateActiveSubscriptionsAsync(dto.TenantId);
+
+            var subscription = new Subscription
+            {
+                TenantId = dto.TenantId,
+                PlaneId = dto.PlaneId,
+                StatusId = dto.StatusId,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate
+            };
+
+            await _repository.CreateSubscriptionAsync(subscription);
+
+            return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, new
+            {
+                success = true,
+                data = new { id = subscription.Id }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nella creazione dell'abbonamento");
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // PUT: api/Subscriptions/{id}
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateSubscription(int id, UpdateSubscriptionDto dto)
     {
-        var subscription = await _context.Subscriptions.FindAsync(id);
-
-        if (subscription == null)
+        try
         {
-            return NotFound(new { success = false, error = "Abbonamento non trovato" });
+            var subscription = await _repository.GetSubscriptionByIdAsync(id);
+
+            if (subscription == null)
+            {
+                return NotFound(new { success = false, error = "NOT_FOUND" });
+            }
+
+            subscription.PlaneId = dto.PlaneId;
+            subscription.StatusId = dto.StatusId;
+            subscription.StartDate = dto.StartDate;
+            subscription.EndDate = dto.EndDate;
+
+            await _repository.UpdateSubscriptionAsync(subscription);
+
+            return Ok(new { success = true, message = "Abbonamento aggiornato con successo" });
         }
-
-        subscription.PlaneId = dto.PlaneId;
-        subscription.StatusId = dto.StatusId;
-        subscription.StartDate = dto.StartDate;
-        subscription.EndDate = dto.EndDate;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = "Abbonamento aggiornato con successo" });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nell'aggiornamento dell'abbonamento {Id}", id);
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // DELETE: api/Subscriptions/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSubscription(int id)
     {
-        var subscription = await _context.Subscriptions.FindAsync(id);
-
-        if (subscription == null)
+        try
         {
-            return NotFound(new { success = false, error = "Abbonamento non trovato" });
+            var subscription = await _repository.GetSubscriptionByIdAsync(id);
+            if (subscription == null)
+            {
+                return NotFound(new { success = false, error = "NOT_FOUND" });
+            }
+
+            await _repository.DeleteSubscriptionAsync(id);
+
+            return Ok(new { success = true, message = "Abbonamento eliminato con successo" });
         }
-
-        _context.Subscriptions.Remove(subscription);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = "Abbonamento eliminato con successo" });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nell'eliminazione dell'abbonamento {Id}", id);
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // PUT: api/Subscriptions/{id}/change-status
     [HttpPut("{id}/change-status")]
     public async Task<IActionResult> ChangeStatus(int id, [FromQuery] int statusId)
     {
-        var subscription = await _context.Subscriptions.FindAsync(id);
-
-        if (subscription == null)
+        try
         {
-            return NotFound(new { success = false, error = "Abbonamento non trovato" });
-        }
+            var subscription = await _repository.GetSubscriptionByIdAsync(id);
 
-        var status = await _context.SubscriptionStatuses.FindAsync(statusId);
-        if (status == null)
+            if (subscription == null)
+            {
+                return NotFound(new { success = false, error = "NOT_FOUND" });
+            }
+
+            var status = await _repository.GetStatusByIdAsync(statusId);
+            if (status == null)
+            {
+                return BadRequest(new { success = false, error = "INVALID_STATUS_ID" });
+            }
+
+            subscription.StatusId = statusId;
+            await _repository.UpdateSubscriptionAsync(subscription);
+
+            return Ok(new { success = true, message = $"Stato cambiato in '{status.Name}'" });
+        }
+        catch (Exception ex)
         {
-            return BadRequest(new { success = false, error = "Stato non valido" });
+            _logger.LogError(ex, "Errore nel cambio stato dell'abbonamento {Id}", id);
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
         }
-
-        subscription.StatusId = statusId;
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = $"Stato cambiato in '{status.Name}'" });
     }
 
     // PUT: api/Subscriptions/{id}/renew
     [HttpPut("{id}/renew")]
     public async Task<IActionResult> RenewSubscription(int id, [FromQuery] int months = 12)
     {
-        var subscription = await _context.Subscriptions.FindAsync(id);
-
-        if (subscription == null)
+        try
         {
-            return NotFound(new { success = false, error = "Abbonamento non trovato" });
+            var subscription = await _repository.GetSubscriptionByIdAsync(id);
+
+            if (subscription == null)
+            {
+                return NotFound(new { success = false, error = "NOT_FOUND" });
+            }
+
+            // Calcola nuova data di scadenza
+            var currentEnd = subscription.EndDate ?? DateOnly.FromDateTime(DateTime.Today);
+            var newEnd = currentEnd < DateOnly.FromDateTime(DateTime.Today)
+                ? DateOnly.FromDateTime(DateTime.Today.AddMonths(months))
+                : currentEnd.AddMonths(months);
+
+            subscription.EndDate = newEnd;
+            subscription.StatusId = 1; // active
+
+            await _repository.UpdateSubscriptionAsync(subscription);
+
+            return Ok(new {
+                success = true,
+                message = $"Abbonamento rinnovato fino al {newEnd:dd/MM/yyyy}",
+                newEndDate = newEnd
+            });
         }
-
-        // Calcola nuova data di scadenza
-        var currentEnd = subscription.EndDate ?? DateOnly.FromDateTime(DateTime.Today);
-        var newEnd = currentEnd < DateOnly.FromDateTime(DateTime.Today) 
-            ? DateOnly.FromDateTime(DateTime.Today.AddMonths(months))
-            : currentEnd.AddMonths(months);
-
-        subscription.EndDate = newEnd;
-        subscription.StatusId = 1; // active
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { 
-            success = true, 
-            message = $"Abbonamento rinnovato fino al {newEnd:dd/MM/yyyy}",
-            newEndDate = newEnd
-        });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel rinnovo dell'abbonamento {Id}", id);
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // GET: api/Subscriptions/planes
     [HttpGet("planes")]
     public async Task<ActionResult> GetPlanes()
     {
-        var planes = await _context.Planes
-            .Where(p => p.IsActive == true)
-            .Select(p => new PlaneDto
+        try
+        {
+            var planes = await _repository.GetPlanesAsync();
+            var result = planes.Select(p => new PlaneDto
             {
                 Id = p.Id,
                 Name = p.Name,
                 Description = p.Description,
                 IsActive = p.IsActive ?? false
-            })
-            .ToListAsync();
+            });
 
-        return Ok(new { success = true, data = planes });
+            return Ok(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero dei piani");
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // GET: api/Subscriptions/statuses
     [HttpGet("statuses")]
     public async Task<ActionResult> GetStatuses()
     {
-        var statuses = await _context.SubscriptionStatuses
-            .Where(s => s.IsActive == true)
-            .Select(s => new SubscriptionStatusDto
+        try
+        {
+            var statuses = await _repository.GetStatusesAsync();
+            var result = statuses.Select(s => new SubscriptionStatusDto
             {
                 Id = s.Id,
                 Name = s.Name,
                 IsActive = s.IsActive ?? false
-            })
-            .ToListAsync();
+            });
 
-        return Ok(new { success = true, data = statuses });
+            return Ok(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero degli stati");
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 
     // GET: api/Subscriptions/expiring
     [HttpGet("expiring")]
     public async Task<ActionResult> GetExpiringSubscriptions([FromQuery] int days = 30)
     {
-        var limitDate = DateOnly.FromDateTime(DateTime.Today.AddDays(days));
+        try
+        {
+            var subscriptions = await _repository.GetExpiringSubscriptionsAsync(days);
 
-        var subscriptions = await _context.Subscriptions
-            .Where(s => s.Status != null && s.Status.Name == "active" && s.EndDate <= limitDate)
-            .Include(s => s.Tenant)
-            .Include(s => s.Plane)
-            .OrderBy(s => s.EndDate)
-            .Select(s => new SubscriptionListDto
+            var result = subscriptions.Select(s => new SubscriptionListDto
             {
                 Id = s.Id,
                 TenantId = s.TenantId,
                 TenantName = s.Tenant.Name,
                 TenantAcronym = s.Tenant.Acronym,
                 PlaneId = s.PlaneId,
-                PlaneName = s.Plane != null ? s.Plane.Name : null,
+                PlaneName = s.Plane?.Name,
                 StatusId = s.StatusId,
                 StatusName = "active",
                 StartDate = s.StartDate,
                 EndDate = s.EndDate
-            })
-            .ToListAsync();
+            });
 
-        return Ok(new { success = true, data = subscriptions, count = subscriptions.Count });
+            return Ok(new { success = true, data = result, count = result.Count() });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero degli abbonamenti in scadenza");
+            return StatusCode(500, new { success = false, error = "DATABASE_ERROR" });
+        }
     }
 }

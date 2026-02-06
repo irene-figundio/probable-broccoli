@@ -7,6 +7,7 @@ using WorkBotAI.API.DTOs;
 using WorkbotAI.Models;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 using System.Linq;
+using WorkBotAI.API.Services;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -29,7 +30,12 @@ public class RegisterController : ControllerBase
     {
         if (string.IsNullOrEmpty(dto.BusinessName)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Nome attività obbligatorio" });
         if (string.IsNullOrEmpty(dto.OwnerEmail)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email obbligatoria" });
-        if (string.IsNullOrEmpty(dto.OwnerPassword) || dto.OwnerPassword.Length < 6) return BadRequest(new RegisterResponseDto { Success = false, Error = "Password deve essere almeno 6 caratteri" });
+
+        var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.OwnerPassword);
+        if (!isPasswordValid)
+        {
+            return BadRequest(new RegisterResponseDto { Success = false, Error = passwordError });
+        }
 
         var existingUser = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
         if (existingUser != null) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email già registrata" });

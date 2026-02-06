@@ -33,4 +33,27 @@ public class AdminController : ControllerBase
             });
         }
     }
+
+    [HttpGet("search")]
+    public async Task<ActionResult> GlobalSearch([FromQuery] string q, [FromQuery] int limit = 10)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return BadRequest(new { success = false, error = "Query parameter 'q' is required" });
+            }
+
+            var results = await _adminRepository.GlobalSearchAsync(q, limit);
+            return Ok(new { success = true, data = results });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                error = $"Errore durante la ricerca: {ex.Message}"
+            });
+        }
+    }
 }

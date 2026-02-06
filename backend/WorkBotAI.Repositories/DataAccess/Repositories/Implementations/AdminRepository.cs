@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -84,6 +85,49 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
                 },
                 Growth = new GrowthStats { Percentage = 25.5m, Trend = "up" }
             };
+        }
+
+        public async Task<GlobalSearchResultDto> GlobalSearchAsync(string query, int limit)
+        {
+            var result = new GlobalSearchResultDto();
+            var searchTerm = query.ToLower();
+
+            // Search Tenants
+            var tenants = await _context.Tenants
+                .Where(t => t.Name.ToLower().Contains(searchTerm) ||
+                            (t.Acronym != null && t.Acronym.ToLower().Contains(searchTerm)))
+                .Take(limit)
+                .Select(t => new SearchResultItemDto
+                {
+                    Id = t.Id.ToString(),
+                    Title = t.Name ?? "Unknown",
+                    Subtitle = t.Acronym ?? "",
+                    Type = "tenant",
+                    AdditionalInfo = t.IsActive == true ? "Attivo" : "Non attivo"
+                })
+                .ToListAsync();
+
+            // Search Users
+            var users = await _context.Users
+                .Where(u => u.UserName.ToLower().Contains(searchTerm) ||
+                            u.FirstName.ToLower().Contains(searchTerm) ||
+                            u.LastName.ToLower().Contains(searchTerm) ||
+                            u.Mail.ToLower().Contains(searchTerm))
+                .Take(limit)
+                .Select(u => new SearchResultItemDto
+                {
+                    Id = u.Id.ToString(),
+                    Title = $"{u.FirstName} {u.LastName}",
+                    Subtitle = u.Mail ?? u.UserName ?? "",
+                    Type = "user",
+                    AdditionalInfo = u.Role != null ? u.Role.Name : "Nessun ruolo"
+                })
+                .ToListAsync();
+
+            result.Tenants = tenants;
+            result.Users = users;
+
+            return result;
         }
     }
 }

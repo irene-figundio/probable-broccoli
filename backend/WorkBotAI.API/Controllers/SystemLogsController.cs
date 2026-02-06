@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
-using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -9,11 +9,13 @@ namespace WorkBotAI.API.Controllers;
 [Route("api/[controller]")]
 public class SystemLogsController : ControllerBase
 {
-    private readonly WorkBotAIContext _context;
+    private readonly ISystemLogRepository _repository;
+    private readonly ILogger<SystemLogsController> _logger;
 
-    public SystemLogsController(WorkBotAIContext context)
+    public SystemLogsController(ISystemLogRepository repository, ILogger<SystemLogsController> logger)
     {
-        _context = context;
+        _repository = repository;
+        _logger = logger;
     }
 
     // GET: api/SystemLogs
@@ -27,37 +29,21 @@ public class SystemLogsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
-        var query = _context.SystemLogs.AsQueryable();
+        try
+        {
+            // Validazione input
+            if (page < 1) return BadRequest(new { success = false, error = "La pagina deve essere >= 1" });
+            if (pageSize < 1 || pageSize > 500) return BadRequest(new { success = false, error = "pageSize non valido (1-500)" });
+            if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+            {
+                return BadRequest(new { success = false, error = "La data di inizio non può essere successiva alla data di fine" });
+            }
 
-        // Filtri
-        if (!string.IsNullOrEmpty(level) && level != "all")
-            query = query.Where(l => l.Level.ToLower() == level.ToLower());
+            var (logs, totalCount) = await _repository.GetLogsAsync(level, startDate, endDate, tenantId, searchTerm, page, pageSize);
 
-        if (startDate.HasValue)
-            query = query.Where(l => l.Timestamp >= startDate.Value);
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        if (endDate.HasValue)
-            query = query.Where(l => l.Timestamp <= endDate.Value.AddDays(1));
-
-        if (tenantId.HasValue)
-            query = query.Where(l => l.TenantId == tenantId.Value);
-
-        if (!string.IsNullOrEmpty(searchTerm))
-            query = query.Where(l => 
-                l.Message.Contains(searchTerm) || 
-                l.Source.Contains(searchTerm) ||
-                (l.Context != null && l.Context.Contains(searchTerm)));
-
-        // Conteggio totale
-        var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-        // Paginazione e ordinamento
-        var logs = await query
-            .OrderByDescending(l => l.Timestamp)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(l => new SystemLogDto
+            var logsDto = logs.Select(l => new SystemLogDto
             {
                 Id = l.Id,
                 Timestamp = l.Timestamp,
@@ -69,167 +55,194 @@ public class SystemLogsController : ControllerBase
                 TenantId = l.TenantId,
                 IpAddress = l.IpAddress,
                 UserAgent = l.UserAgent
-            })
-            .ToListAsync();
+            }).ToList();
 
-        return Ok(new
-        {
-            success = true,
-            data = new LogsResponseDto
+            return Ok(new
             {
-                Logs = logs,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize,
-                TotalPages = totalPages
-            }
-        });
+                success = true,
+                data = new LogsResponseDto
+                {
+                    Logs = logsDto,
+                    TotalCount = totalCount,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = totalPages
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero dei log di sistema");
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR", message = ex.Message });
+        }
     }
 
     // GET: api/SystemLogs/5
     [HttpGet("{id}")]
     public async Task<ActionResult> GetLog(int id)
     {
-        var log = await _context.SystemLogs.FindAsync(id);
-
-        if (log == null)
-            return NotFound(new { success = false, error = "Log non trovato" });
-
-        return Ok(new
+        try
         {
-            success = true,
-            data = new SystemLogDto
+            var log = await _repository.GetLogByIdAsync(id);
+
+            if (log == null)
+                return NotFound(new { success = false, error = "Log non trovato" });
+
+            return Ok(new
             {
-                Id = log.Id,
-                Timestamp = log.Timestamp,
-                Level = log.Level,
-                Source = log.Source,
-                Message = log.Message,
-                Context = log.Context,
-                UserId = log.UserId,
-                TenantId = log.TenantId,
-                IpAddress = log.IpAddress,
-                UserAgent = log.UserAgent
-            }
-        });
+                success = true,
+                data = new SystemLogDto
+                {
+                    Id = log.Id,
+                    Timestamp = log.Timestamp,
+                    Level = log.Level,
+                    Source = log.Source,
+                    Message = log.Message,
+                    Context = log.Context,
+                    UserId = log.UserId,
+                    TenantId = log.TenantId,
+                    IpAddress = log.IpAddress,
+                    UserAgent = log.UserAgent
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero del log {Id}", id);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // POST: api/SystemLogs
     [HttpPost]
     public async Task<ActionResult> CreateLog([FromBody] CreateLogDto dto)
     {
-        var log = new SystemLog
+        try
         {
-            Timestamp = DateTime.UtcNow,
-            Level = dto.Level,
-            Source = dto.Source,
-            Message = dto.Message,
-            Context = dto.Context,
-            UserId = dto.UserId,
-            TenantId = dto.TenantId,
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-            UserAgent = Request.Headers["User-Agent"].ToString()
-        };
+            var log = new SystemLog
+            {
+                Timestamp = DateTime.UtcNow,
+                Level = dto.Level,
+                Source = dto.Source,
+                Message = dto.Message,
+                Context = dto.Context,
+                UserId = dto.UserId,
+                TenantId = dto.TenantId,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers["User-Agent"].ToString()
+            };
 
-        _context.SystemLogs.Add(log);
-        await _context.SaveChangesAsync();
+            await _repository.CreateLogAsync(log);
 
-        return CreatedAtAction(nameof(GetLog), new { id = log.Id },
-            new { success = true, data = new { id = log.Id } });
+            return CreatedAtAction(nameof(GetLog), new { id = log.Id },
+                new { success = true, data = new { id = log.Id } });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nella creazione del log");
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // DELETE: api/SystemLogs/5
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteLog(int id)
     {
-        var log = await _context.SystemLogs.FindAsync(id);
-        if (log == null)
-            return NotFound(new { success = false, error = "Log non trovato" });
+        try
+        {
+            var deleted = await _repository.DeleteLogAsync(id);
+            if (!deleted)
+                return NotFound(new { success = false, error = "Log non trovato" });
 
-        _context.SystemLogs.Remove(log);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = "Log eliminato" });
+            return Ok(new { success = true, message = "Log eliminato" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nell'eliminazione del log {Id}", id);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // DELETE: api/SystemLogs/clear
     [HttpDelete("clear")]
     public async Task<ActionResult> ClearLogs([FromQuery] DateTime? olderThan)
     {
-        var query = _context.SystemLogs.AsQueryable();
-
-        if (olderThan.HasValue)
-            query = query.Where(l => l.Timestamp < olderThan.Value);
-
-        var count = await query.CountAsync();
-        _context.SystemLogs.RemoveRange(query);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = $"{count} log eliminati" });
+        try
+        {
+            var count = await _repository.ClearLogsAsync(olderThan);
+            return Ok(new { success = true, message = $"{count} log eliminati" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nella pulizia dei log");
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/SystemLogs/stats
     [HttpGet("stats")]
     public async Task<ActionResult> GetStats()
     {
-        var today = DateTime.UtcNow.Date;
-        var weekAgo = today.AddDays(-7);
-
-        var stats = new
+        try
         {
-            totalLogs = await _context.SystemLogs.CountAsync(),
-            todayLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= today),
-            weekLogs = await _context.SystemLogs.CountAsync(l => l.Timestamp >= weekAgo),
-            errorCount = await _context.SystemLogs.CountAsync(l => l.Level == "error"),
-            warningCount = await _context.SystemLogs.CountAsync(l => l.Level == "warning"),
-            infoCount = await _context.SystemLogs.CountAsync(l => l.Level == "info"),
-            byLevel = await _context.SystemLogs
-                .GroupBy(l => l.Level)
-                .Select(g => new { level = g.Key, count = g.Count() })
-                .ToListAsync()
-        };
-
-        return Ok(new { success = true, data = stats });
+            var stats = await _repository.GetStatsAsync();
+            return Ok(new { success = true, data = stats });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel recupero delle statistiche dei log");
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // POST: api/SystemLogs/seed - Per popolare con dati di test
     [HttpPost("seed")]
     public async Task<ActionResult> SeedLogs()
     {
-        var sources = new[] { "AuthController", "AppointmentsController", "TenantsController", "UsersController", "System" };
-        var levels = new[] { "info", "warning", "error", "debug" };
-        var messages = new Dictionary<string, string[]>
+        try
         {
-            { "info", new[] { "Utente loggato con successo", "Appuntamento creato", "Tenant registrato", "Impostazioni aggiornate", "Email inviata" } },
-            { "warning", new[] { "Tentativo di accesso fallito", "Sessione in scadenza", "Quota API quasi esaurita", "Backup ritardato" } },
-            { "error", new[] { "Errore connessione database", "Timeout API esterna", "Errore invio email", "Validazione fallita" } },
-            { "debug", new[] { "Query eseguita in 50ms", "Cache invalidata", "Token refreshato", "Webhook ricevuto" } }
-        };
-
-        var random = new Random();
-        var logs = new List<SystemLog>();
-
-        for (int i = 0; i < 100; i++)
-        {
-            var level = levels[random.Next(levels.Length)];
-            var log = new SystemLog
+            var sources = new[] { "AuthController", "AppointmentsController", "TenantsController", "UsersController", "System" };
+            var levels = new[] { "info", "warning", "error", "debug" };
+            var messages = new Dictionary<string, string[]>
             {
-                Timestamp = DateTime.UtcNow.AddHours(-random.Next(0, 168)), // Ultimi 7 giorni
-                Level = level,
-                Source = sources[random.Next(sources.Length)],
-                Message = messages[level][random.Next(messages[level].Length)],
-                Context = random.Next(2) == 0 ? null : $"{{\"requestId\": \"{Guid.NewGuid()}\", \"duration\": {random.Next(10, 500)}}}",
-                UserId = random.Next(2) == 0 ? null : random.Next(1, 4),
-                TenantId = random.Next(2) == 0 ? null : Guid.Parse("7e0429b6-dca7-4e4c-aaf1-388b97bc3512"),
-                IpAddress = $"192.168.1.{random.Next(1, 255)}",
-                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                { "info", new[] { "Utente loggato con successo", "Appuntamento creato", "Tenant registrato", "Impostazioni aggiornate", "Email inviata" } },
+                { "warning", new[] { "Tentativo di accesso fallito", "Sessione in scadenza", "Quota API quasi esaurita", "Backup ritardato" } },
+                { "error", new[] { "Errore connessione database", "Timeout API esterna", "Errore invio email", "Validazione fallita" } },
+                { "debug", new[] { "Query eseguita in 50ms", "Cache invalidata", "Token refreshato", "Webhook ricevuto" } }
             };
-            logs.Add(log);
+
+            var random = new Random();
+            var logs = new List<SystemLog>();
+
+            for (int i = 0; i < 100; i++)
+            {
+                var level = levels[random.Next(levels.Length)];
+                var log = new SystemLog
+                {
+                    Timestamp = DateTime.UtcNow.AddHours(-random.Next(0, 168)), // Ultimi 7 giorni
+                    Level = level,
+                    Source = sources[random.Next(sources.Length)],
+                    Message = messages[level][random.Next(messages[level].Length)],
+                    Context = random.Next(2) == 0 ? null : $"{{\"requestId\": \"{Guid.NewGuid()}\", \"duration\": {random.Next(10, 500)}}}",
+                    UserId = random.Next(2) == 0 ? null : random.Next(1, 4),
+                    TenantId = random.Next(2) == 0 ? null : Guid.Parse("7e0429b6-dca7-4e4c-aaf1-388b97bc3512"),
+                    IpAddress = $"192.168.1.{random.Next(1, 255)}",
+                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                };
+                logs.Add(log);
+            }
+
+            foreach (var log in logs)
+            {
+                await _repository.CreateLogAsync(log);
+            }
+
+            return Ok(new { success = true, message = $"{logs.Count} log di test creati" });
         }
-
-        _context.SystemLogs.AddRange(logs);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { success = true, message = $"{logs.Count} log di test creati" });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore durante il seeding dei log");
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 }
