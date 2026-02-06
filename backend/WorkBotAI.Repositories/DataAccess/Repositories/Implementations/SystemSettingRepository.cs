@@ -94,9 +94,22 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
 
         public async Task EnsureDefaultSettingsAsync()
         {
-            if (!await _context.SystemSettings.AnyAsync())
+            try
             {
-                await SeedDefaultSettingsAsync();
+                if (!await _context.SystemSettings.AnyAsync())
+                {
+                    await SeedDefaultSettingsAsync();
+                }
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208) // Invalid object name
+            {
+                // La tabella non esiste ancora. In un ambiente reale dovremmo eseguire le migrazioni
+                // o informare l'utente. Per ora evitiamo il crash.
+                System.Diagnostics.Debug.WriteLine("La tabella SystemSettings non esiste nel database.");
+            }
+            catch (Exception)
+            {
+                // Altri errori
             }
         }
 
