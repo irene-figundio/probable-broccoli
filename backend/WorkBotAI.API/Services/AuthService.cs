@@ -89,7 +89,7 @@ public class AuthService
 
     private string GenerateJwtToken(User user)
     {
-        var jwtKey = _configuration["Jwt:Key"] ?? "WorkBotAI_SuperSecretKey_2024_MinLength32Characters!";
+        var jwtKey = _configuration["Jwt:Key"] ?? "aee30e2c-73b5-4b87-9d9d-e28c7a326626A!wkr8vHmpUrJ784";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
