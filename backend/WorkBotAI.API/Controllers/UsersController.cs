@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
 using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.API.Services;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -118,6 +119,12 @@ public class UsersController : ControllerBase
         if (existingEmail != null)
         {
             return BadRequest(new { success = false, error = "Email già esistente" });
+        }
+
+        var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.Password);
+        if (!isPasswordValid)
+        {
+            return BadRequest(new { success = false, error = passwordError });
         }
 
         var user = new User
@@ -267,6 +274,12 @@ public class UsersController : ControllerBase
         if (user == null)
         {
             return NotFound(new { success = false, error = "Utente non trovato" });
+        }
+
+        var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.NewPassword);
+        if (!isPasswordValid)
+        {
+            return BadRequest(new { success = false, error = passwordError });
         }
 
         // In produzione: hash della password
