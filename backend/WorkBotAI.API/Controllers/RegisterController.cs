@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,6 +12,7 @@ using WorkBotAI.API.Services;
 
 namespace WorkBotAI.API.Controllers;
 
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class RegisterController : ControllerBase
@@ -78,7 +80,7 @@ public class RegisterController : ControllerBase
             issuer: _configuration["Jwt:Issuer"] ?? "WorkBotAI",
             audience: _configuration["Jwt:Audience"] ?? "WorkBotAI",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials
         );
 
