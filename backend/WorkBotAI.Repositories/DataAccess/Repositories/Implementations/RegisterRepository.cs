@@ -35,7 +35,7 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
                 _context.Subscriptions.Add(subscription);
                 await _context.SaveChangesAsync();
 
-                var user = new User { TenantId = tenant.Id, FirstName = dto.OwnerFirstName, LastName = dto.OwnerLastName, Mail = dto.OwnerEmail, UserName = dto.OwnerEmail, Password = dto.OwnerPassword, RoleId = 2, IsActive = true, IsSuperAdmin = false, CreationTime = DateTime.UtcNow, IsDeleted = false };
+                var user = new User { TenantId = tenant.Id, FirstName = dto.OwnerFirstName, LastName = dto.OwnerLastName, Mail = dto.OwnerEmail, UserName = dto.OwnerEmail, Password = dto.OwnerPassword, RoleId = 3, IsActive = true, IsSuperAdmin = false, CreationTime = DateTime.UtcNow, IsDeleted = false };
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 

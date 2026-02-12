@@ -1,3 +1,4 @@
+using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.API.DTOs;
@@ -13,10 +14,12 @@ namespace WorkBotAI.API.Controllers;
 public class AppointmentsController : ControllerBase
 {
     private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IAuditService _auditService;
 
-    public AppointmentsController(IAppointmentRepository appointmentRepository)
+    public AppointmentsController(IAppointmentRepository appointmentRepository, IAuditService auditService)
     {
         _appointmentRepository = appointmentRepository;
+        _auditService = auditService;
     }
 
     // GET: api/Appointments
@@ -101,37 +104,46 @@ public class AppointmentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> CreateAppointment(CreateAppointmentDto dto)
     {
-        var appointment = new Appointment
+        try
         {
-            TenantId = dto.TenantId,
-            CustomerId = dto.CustomerId,
-            StaffId = dto.StaffId,
-            ResourceId = dto.ResourceId,
-            StatusId = dto.StatusId,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
-            Note = dto.Note,
-            IsActive = true,
-            CreationTime = DateTime.UtcNow,
-            IsDeleted = false
-        };
-
-        var createdAppointment = await _appointmentRepository.CreateAppointmentAsync(appointment);
-
-        return CreatedAtAction(nameof(GetAppointment), new { id = createdAppointment.Id }, new
-        {
-            success = true,
-            data = new AppointmentListDto
+            var appointment = new Appointment
             {
-                Id = createdAppointment.Id,
-                TenantId = createdAppointment.TenantId,
-                StatusId = createdAppointment.StatusId,
-                StartTime = createdAppointment.StartTime,
-                EndTime = createdAppointment.EndTime,
-                Note = createdAppointment.Note,
-                IsActive = createdAppointment.IsActive ?? false
-            }
-        });
+                TenantId = dto.TenantId,
+                CustomerId = dto.CustomerId,
+                StaffId = dto.StaffId,
+                ResourceId = dto.ResourceId,
+                StatusId = dto.StatusId,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Note = dto.Note,
+                IsActive = true,
+                CreationTime = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            var createdAppointment = await _appointmentRepository.CreateAppointmentAsync(appointment);
+            await _auditService.LogActionAsync("Appointments", "Create", $"Created appointment {createdAppointment.Id} for customer {dto.CustomerId}", null, dto.TenantId);
+
+            return CreatedAtAction(nameof(GetAppointment), new { id = createdAppointment.Id }, new
+            {
+                success = true,
+                data = new AppointmentListDto
+                {
+                    Id = createdAppointment.Id,
+                    TenantId = createdAppointment.TenantId,
+                    StatusId = createdAppointment.StatusId,
+                    StartTime = createdAppointment.StartTime,
+                    EndTime = createdAppointment.EndTime,
+                    Note = createdAppointment.Note,
+                    IsActive = createdAppointment.IsActive ?? false
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Appointments", "Error creating appointment", ex, dto.TenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // PUT: api/Appointments/{id}
@@ -163,16 +175,34 @@ public class AppointmentsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAppointment(int id)
     {
-        await _appointmentRepository.DeleteAppointmentAsync(id);
-        return Ok(new { success = true, message = "Appuntamento eliminato con successo" });
+        try
+        {
+            await _appointmentRepository.DeleteAppointmentAsync(id);
+            await _auditService.LogActionAsync("Appointments", "Delete", $"Deleted appointment {id}");
+            return Ok(new { success = true, message = "Appuntamento eliminato con successo" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Appointments", $"Error deleting appointment {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // PUT: api/Appointments/{id}/change-status
     [HttpPut("{id}/change-status")]
     public async Task<IActionResult> ChangeStatus(int id, [FromQuery] int statusId)
     {
-        await _appointmentRepository.ChangeAppointmentStatusAsync(id, statusId);
-        return Ok(new { success = true, message = "Stato cambiato con successo" });
+        try
+        {
+            await _appointmentRepository.ChangeAppointmentStatusAsync(id, statusId);
+            await _auditService.LogActionAsync("Appointments", "ChangeStatus", $"Changed appointment {id} status to {statusId}");
+            return Ok(new { success = true, message = "Stato cambiato con successo" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Appointments", $"Error changing status for appointment {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Appointments/statuses

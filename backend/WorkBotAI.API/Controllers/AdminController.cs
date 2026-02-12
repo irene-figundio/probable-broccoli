@@ -1,3 +1,5 @@
+using WorkBotAI.API.DTOs;
+using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
@@ -10,10 +12,12 @@ namespace WorkBotAI.API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IAdminRepository _adminRepository;
+    private readonly IAuditService _auditService;
 
-    public AdminController(IAdminRepository adminRepository)
+    public AdminController(IAdminRepository adminRepository, IAuditService auditService)
     {
         _adminRepository = adminRepository;
+        _auditService = auditService;
     }
 
     [HttpGet("stats")]
@@ -45,10 +49,12 @@ public class AdminController : ControllerBase
             }
 
             var results = await _adminRepository.GlobalSearchAsync(q, limit);
+            await _auditService.LogActionAsync("Admin", "GlobalSearch", $"Search query: {q}");
             return Ok(new { success = true, data = results });
         }
         catch (Exception ex)
         {
+            await _auditService.LogErrorAsync("Admin", "Error during global search", ex);
             return StatusCode(500, new
             {
                 success = false,

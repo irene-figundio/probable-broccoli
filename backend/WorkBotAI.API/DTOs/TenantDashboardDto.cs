@@ -1,5 +1,15 @@
 namespace WorkBotAI.API.DTOs;
 
+// DTO principale per la dashboard del tenant
+public class TenantDashboardDto
+{
+    public Guid TenantId { get; set; }
+    public string TenantName { get; set; } = string.Empty;
+    public object? Stats { get; set; }
+    public List<WorkBotAI.API.DTOs.AppointmentListDto> UpcomingAppointments { get; set; } = new();
+    public List<WorkBotAI.API.DTOs.AppointmentListDto> RecentAppointments { get; set; } = new();
+}
+
 // DTO per le statistiche dashboard del tenant
 public class TenantDashboardStatsDto
 {

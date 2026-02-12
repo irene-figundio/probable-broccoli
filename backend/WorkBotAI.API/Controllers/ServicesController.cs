@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.API.DTOs;
 using WorkbotAI.Models;
+using WorkBotAI.API.Services;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
-using System.Linq;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -13,136 +13,208 @@ namespace WorkBotAI.API.Controllers;
 public class ServicesController : ControllerBase
 {
     private readonly IServiceRepository _serviceRepository;
+    private readonly IAuditService _auditService;
 
-    public ServicesController(IServiceRepository serviceRepository)
+    public ServicesController(IServiceRepository serviceRepository, IAuditService auditService)
     {
         _serviceRepository = serviceRepository;
+        _auditService = auditService;
     }
 
     // GET: api/Services
     [HttpGet]
     public async Task<ActionResult> GetServices([FromQuery] Guid? tenantId, [FromQuery] string? search, [FromQuery] int? categoryId)
     {
-        var services = await _serviceRepository.GetServicesAsync(tenantId, search, categoryId);
-        return Ok(new { success = true, data = services, count = services.Count() });
+        try
+        {
+            var services = await _serviceRepository.GetServicesAsync(tenantId, search, categoryId);
+            return Ok(new { success = true, data = services, count = services.Count() });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", "Error retrieving services", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Services/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult> GetService(int id)
     {
-        var service = await _serviceRepository.GetServiceByIdAsync(id);
-        if (service == null)
-            return NotFound(new { success = false, error = "Servizio non trovato" });
-
-        var dto = new ServiceDetailDto
+        try
         {
-            Id = service.Id,
-            TenantId = service.TenantId,
-            TenantName = service.Tenant?.Name,
-            CategoryId = service.CategoryId,
-            CategoryName = service.Category?.Name,
-            Name = service.Name,
-            Description = service.Description,
-            DurationMin = service.DurationMin,
-            BasePrice = service.BasePrice,
-            BufferTime = service.BafferTime,
-            IsActive = service.IsActive ?? true,
-            CreationTime = service.CreationTime,
-            IsDeleted = service.IsDeleted ?? false
-        };
-        return Ok(new { success = true, data = dto });
+            var service = await _serviceRepository.GetServiceByIdAsync(id);
+            if (service == null)
+                return NotFound(new { success = false, error = "Servizio non trovato" });
+
+            var dto = new ServiceDetailDto
+            {
+                Id = service.Id,
+                TenantId = service.TenantId,
+                TenantName = service.Tenant?.Name,
+                CategoryId = service.CategoryId,
+                CategoryName = service.Category?.Name,
+                Name = service.Name,
+                Description = service.Description,
+                DurationMin = service.DurationMin,
+                BasePrice = service.BasePrice,
+                BufferTime = service.BafferTime,
+                IsActive = service.IsActive ?? true,
+                CreationTime = service.CreationTime,
+                IsDeleted = service.IsDeleted ?? false
+            };
+            return Ok(new { success = true, data = dto });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", $"Error retrieving service {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // POST: api/Services
     [HttpPost]
     public async Task<ActionResult> CreateService([FromBody] CreateServiceDto dto)
     {
-        var service = new Service
+        try
         {
-            TenantId = dto.TenantId,
-            CategoryId = dto.CategoryId,
-            Name = dto.Name,
-            Description = dto.Description,
-            DurationMin = dto.DurationMin,
-            BasePrice = dto.BasePrice,
-            BafferTime = dto.BufferTime,
-            IsActive = true,
-            CreationTime = DateTime.UtcNow,
-            IsDeleted = false
-        };
-
-        var createdService = await _serviceRepository.CreateServiceAsync(service);
-        return CreatedAtAction(nameof(GetService), new { id = createdService.Id }, new
-        {
-            success = true,
-            data = new ServiceListDto
+            var service = new Service
             {
-                Id = createdService.Id,
-                TenantId = createdService.TenantId,
-                Name = createdService.Name,
-                Description = createdService.Description,
-                DurationMin = createdService.DurationMin,
-                BasePrice = createdService.BasePrice,
+                TenantId = dto.TenantId,
+                CategoryId = dto.CategoryId,
+                Name = dto.Name,
+                Description = dto.Description,
+                DurationMin = dto.DurationMin,
+                BasePrice = dto.BasePrice,
+                BafferTime = dto.BufferTime,
                 IsActive = true,
-                CreationTime = createdService.CreationTime,
-                AppointmentsCount = 0
-            }
-        });
+                CreationTime = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            var createdService = await _serviceRepository.CreateServiceAsync(service);
+            await _auditService.LogActionAsync("Services", "Create", $"Created service {service.Name} ({service.Id})", null, dto.TenantId);
+
+            return CreatedAtAction(nameof(GetService), new { id = createdService.Id }, new
+            {
+                success = true,
+                data = new ServiceListDto
+                {
+                    Id = createdService.Id,
+                    TenantId = createdService.TenantId,
+                    Name = createdService.Name,
+                    Description = createdService.Description,
+                    DurationMin = createdService.DurationMin,
+                    BasePrice = createdService.BasePrice,
+                    IsActive = true,
+                    CreationTime = createdService.CreationTime,
+                    AppointmentsCount = 0
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", "Error creating service", ex, dto.TenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // PUT: api/Services/{id}
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateService(int id, [FromBody] UpdateServiceDto dto)
     {
-        var service = await _serviceRepository.GetServiceByIdAsync(id);
-        if (service == null)
-            return NotFound(new { success = false, error = "Servizio non trovato" });
+        try
+        {
+            var service = await _serviceRepository.GetServiceByIdAsync(id);
+            if (service == null)
+                return NotFound(new { success = false, error = "Servizio non trovato" });
 
-        service.CategoryId = dto.CategoryId;
-        service.Name = dto.Name;
-        service.Description = dto.Description;
-        service.DurationMin = dto.DurationMin;
-        service.BasePrice = dto.BasePrice;
-        service.BafferTime = dto.BufferTime;
-        service.IsActive = dto.IsActive;
-        service.LastModificationTime = DateTime.UtcNow;
+            service.CategoryId = dto.CategoryId;
+            service.Name = dto.Name;
+            service.Description = dto.Description;
+            service.DurationMin = dto.DurationMin;
+            service.BasePrice = dto.BasePrice;
+            service.BafferTime = dto.BufferTime;
+            service.IsActive = dto.IsActive;
+            service.LastModificationTime = DateTime.UtcNow;
 
-        await _serviceRepository.UpdateServiceAsync(service);
-        return Ok(new { success = true, message = "Servizio aggiornato" });
+            await _serviceRepository.UpdateServiceAsync(service);
+            await _auditService.LogActionAsync("Services", "Update", $"Updated service {id}", null, service.TenantId);
+
+            return Ok(new { success = true, message = "Servizio aggiornato" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", $"Error updating service {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // DELETE: api/Services/{id}
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteService(int id)
     {
-        await _serviceRepository.DeleteServiceAsync(id);
-        return Ok(new { success = true, message = "Servizio eliminato" });
+        try
+        {
+            await _serviceRepository.DeleteServiceAsync(id);
+            await _auditService.LogActionAsync("Services", "Delete", $"Deleted service {id}");
+            return Ok(new { success = true, message = "Servizio eliminato" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", $"Error deleting service {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // PUT: api/Services/{id}/toggle-status
     [HttpPut("{id}/toggle-status")]
     public async Task<ActionResult> ToggleServiceStatus(int id)
     {
-        await _serviceRepository.ToggleServiceStatusAsync(id);
-        var service = await _serviceRepository.GetServiceByIdAsync(id);
-        return Ok(new { success = true, message = service.IsActive == true ? "Servizio attivato" : "Servizio disattivato", isActive = service.IsActive });
+        try
+        {
+            await _serviceRepository.ToggleServiceStatusAsync(id);
+            var service = await _serviceRepository.GetServiceByIdAsync(id);
+            await _auditService.LogActionAsync("Services", "ToggleStatus", $"Toggled status for service {id} to {service?.IsActive}", null, service?.TenantId);
+            return Ok(new { success = true, message = service?.IsActive == true ? "Servizio attivato" : "Servizio disattivato", isActive = service?.IsActive });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", $"Error toggling status for service {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Services/tenant/{tenantId}/stats
     [HttpGet("tenant/{tenantId}/stats")]
     public async Task<ActionResult> GetTenantServiceStats(Guid tenantId)
     {
-        var totalServices = await _serviceRepository.GetTotalServicesAsync(tenantId);
-        var activeServices = await _serviceRepository.GetActiveServicesAsync(tenantId);
-        return Ok(new { success = true, data = new { totalServices, activeServices } });
+        try
+        {
+            var totalServices = await _serviceRepository.GetTotalServicesAsync(tenantId);
+            var activeServices = await _serviceRepository.GetActiveServicesAsync(tenantId);
+            return Ok(new { success = true, data = new { totalServices, activeServices } });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", $"Error retrieving service stats for tenant {tenantId}", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Services/categories
     [HttpGet("categories")]
     public async Task<ActionResult> GetCategories()
     {
-        var categories = await _serviceRepository.GetCategoriesAsync();
-        return Ok(new { success = true, data = categories.Select(c => new { c.Id, c.Name }) });
+        try
+        {
+            var categories = await _serviceRepository.GetCategoriesAsync();
+            return Ok(new { success = true, data = categories.Select(c => new { c.Id, c.Name }) });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Services", "Error retrieving service categories", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 }

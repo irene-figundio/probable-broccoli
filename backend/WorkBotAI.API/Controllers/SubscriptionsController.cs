@@ -1,3 +1,5 @@
+using WorkBotAI.API.DTOs;
+using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;
@@ -10,11 +12,13 @@ namespace WorkBotAI.API.Controllers;
 public class SubscriptionsController : ControllerBase
 {
     private readonly ISubscriptionRepository _repository;
+    private readonly IAuditService _auditService;
     private readonly ILogger<SubscriptionsController> _logger;
 
-    public SubscriptionsController(ISubscriptionRepository repository, ILogger<SubscriptionsController> logger)
+    public SubscriptionsController(ISubscriptionRepository repository, IAuditService auditService, ILogger<SubscriptionsController> logger)
     {
         _repository = repository;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -118,6 +122,7 @@ public class SubscriptionsController : ControllerBase
             };
 
             await _repository.CreateSubscriptionAsync(subscription);
+            await _auditService.LogActionAsync("Subscriptions", "Create", $"Created subscription {subscription.Id} for tenant {dto.TenantId}");
 
             return CreatedAtAction(nameof(GetSubscription), new { id = subscription.Id }, new
             {
@@ -151,6 +156,7 @@ public class SubscriptionsController : ControllerBase
             subscription.EndDate = dto.EndDate;
 
             await _repository.UpdateSubscriptionAsync(subscription);
+            await _auditService.LogActionAsync("Subscriptions", "Update", $"Updated subscription {id}");
 
             return Ok(new { success = true, message = "Abbonamento aggiornato con successo" });
         }
@@ -174,6 +180,7 @@ public class SubscriptionsController : ControllerBase
             }
 
             await _repository.DeleteSubscriptionAsync(id);
+            await _auditService.LogActionAsync("Subscriptions", "Delete", $"Deleted subscription {id}");
 
             return Ok(new { success = true, message = "Abbonamento eliminato con successo" });
         }
