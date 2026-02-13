@@ -19,37 +19,62 @@ public class RegisterController : ControllerBase
 {
     private readonly IRegisterRepository _registerRepository;
     private readonly IConfiguration _configuration;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IAuditService _auditService;
 
-    public RegisterController(IRegisterRepository registerRepository, IConfiguration configuration)
+    public RegisterController(IRegisterRepository registerRepository, IConfiguration configuration, IPasswordHasher passwordHasher, IAuditService auditService)
     {
         _registerRepository = registerRepository;
         _configuration = configuration;
+        _passwordHasher = passwordHasher;
+        _auditService = auditService;
     }
 
     // POST: api/Register
     [HttpPost]
     public async Task<ActionResult> RegisterTenant([FromBody] RegisterTenantDto dto)
     {
-        if (string.IsNullOrEmpty(dto.BusinessName)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Nome attività obbligatorio" });
-        if (string.IsNullOrEmpty(dto.OwnerEmail)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email obbligatoria" });
-
-        var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.OwnerPassword);
-        if (!isPasswordValid)
+        try
         {
-            return BadRequest(new RegisterResponseDto { Success = false, Error = passwordError });
+            if (string.IsNullOrEmpty(dto.BusinessName)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Nome attività obbligatorio" });
+            if (string.IsNullOrEmpty(dto.OwnerEmail)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email obbligatoria" });
+
+            var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.OwnerPassword);
+            if (!isPasswordValid)
+            {
+                return BadRequest(new RegisterResponseDto { Success = false, Error = passwordError });
+            }
+
+            var existingUser = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
+            if (existingUser != null)
+            {
+                await _auditService.LogActionAsync("Register", "RegisterTenant", $"Attempted registration with already registered email: {dto.OwnerEmail}");
+                return Conflict(new RegisterResponseDto { Success = false, Error = "Email già registrata" });
+            }
+
+            // Hash password
+            dto.OwnerPassword = _passwordHasher.HashPassword(dto.OwnerPassword);
+
+            var result = await _registerRepository.RegisterTenantAsync(dto);
+            if (!result.Success)
+            {
+                await _auditService.LogErrorAsync("Register", $"Registration failed for {dto.OwnerEmail}: {result.Error}");
+                return StatusCode(500, result);
+            }
+
+            var user = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
+            var token = GenerateJwtToken(user, new Tenant { Id = (Guid)result.TenantId, Name = dto.BusinessName });
+            result.Token = token;
+
+            await _auditService.LogActionAsync("Register", "RegisterTenant", $"Successfully registered tenant {dto.BusinessName} and user {dto.OwnerEmail}", null, result.TenantId, user.Id);
+
+            return Ok(result);
         }
-
-        var existingUser = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
-        if (existingUser != null) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email già registrata" });
-
-        var result = await _registerRepository.RegisterTenantAsync(dto);
-        if (!result.Success) return StatusCode(500, result);
-        
-        var user = await _registerRepository.GetUserByEmailAsync(dto.OwnerEmail);
-        var token = GenerateJwtToken(user, new Tenant { Id = (Guid)result.TenantId, Name = dto.BusinessName });
-        result.Token = token;
-
-        return Ok(result);
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Register", "Unexpected error during registration", ex);
+            return StatusCode(500, new RegisterResponseDto { Success = false, Error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Register/categories

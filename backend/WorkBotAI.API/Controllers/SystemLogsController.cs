@@ -1,3 +1,5 @@
+using WorkBotAI.API.DTOs;
+using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkbotAI.Models;

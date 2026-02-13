@@ -40,6 +40,8 @@ public class UpdateFaqDto
 // TENANT FAQ DTOs (Risposte personalizzate)
 // ============================================
 
+public class TenantFaqDto : TenantFaqListDto {}
+
 public class TenantFaqListDto
 {
     public int Id { get; set; }

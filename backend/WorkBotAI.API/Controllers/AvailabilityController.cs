@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.API.DTOs;
 using WorkbotAI.Models;
+using WorkBotAI.API.Services;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
-using System.Linq;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -13,10 +13,12 @@ namespace WorkBotAI.API.Controllers;
 public class AvailabilityController : ControllerBase
 {
     private readonly IAvailabilityRepository _availabilityRepository;
+    private readonly IAuditService _auditService;
 
-    public AvailabilityController(IAvailabilityRepository availabilityRepository)
+    public AvailabilityController(IAvailabilityRepository availabilityRepository, IAuditService auditService)
     {
         _availabilityRepository = availabilityRepository;
+        _auditService = auditService;
     }
 
     // GET: api/Availability
@@ -27,113 +29,174 @@ public class AvailabilityController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var availabilities = await _availabilityRepository.GetAvailabilitiesAsync(tenantId, staffId, from, to);
-        var availabilityDtos = availabilities.Select(a => new AvailabilityListDto
+        try
         {
-            Id = a.Id,
-            TenantId = a.TenantId,
-            StaffId = a.StaffId,
-            StaffName = a.Staff != null ? a.Staff.Name : null,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime,
-            Note = a.Note
-        });
-        return Ok(new { success = true, data = availabilityDtos });
+            var availabilities = await _availabilityRepository.GetAvailabilitiesAsync(tenantId, staffId, from, to);
+            var availabilityDtos = availabilities.Select(a => new AvailabilityListDto
+            {
+                Id = a.Id,
+                TenantId = a.TenantId,
+                StaffId = a.StaffId,
+                StaffName = a.Staff != null ? a.Staff.Name : null,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Note = a.Note
+            });
+            return Ok(new { success = true, data = availabilityDtos });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", "Error retrieving availabilities", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Availability/5
     [HttpGet("{id}")]
     public async Task<ActionResult> GetAvailability(int id)
     {
-        var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
-        if (availability == null)
-            return NotFound(new { success = false, error = "Disponibilità non trovata" });
-
-        var availabilityDto = new AvailabilityDetailDto
+        try
         {
-            Id = availability.Id,
-            TenantId = availability.TenantId,
-            TenantName = availability.Tenant.Name,
-            StaffId = availability.StaffId,
-            StaffName = availability.Staff != null ? availability.Staff.Name : null,
-            StartTime = availability.StartTime,
-            EndTime = availability.EndTime,
-            Note = availability.Note
-        };
-        return Ok(new { success = true, data = availabilityDto });
+            var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
+            if (availability == null)
+                return NotFound(new { success = false, error = "Disponibilità non trovata" });
+
+            var availabilityDto = new AvailabilityDetailDto
+            {
+                Id = availability.Id,
+                TenantId = availability.TenantId,
+                TenantName = availability.Tenant.Name,
+                StaffId = availability.StaffId,
+                StaffName = availability.Staff != null ? availability.Staff.Name : null,
+                StartTime = availability.StartTime,
+                EndTime = availability.EndTime,
+                Note = availability.Note
+            };
+            return Ok(new { success = true, data = availabilityDto });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", $"Error retrieving availability {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // POST: api/Availability
     [HttpPost]
     public async Task<ActionResult> CreateAvailability([FromBody] CreateAvailabilityDto dto)
     {
-        if (dto.StartTime >= dto.EndTime)
-            return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
-
-        var availability = new Availability
+        try
         {
-            TenantId = dto.TenantId,
-            StaffId = dto.StaffId,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
-            Note = dto.Note
-        };
+            if (dto.StartTime >= dto.EndTime)
+                return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
 
-        var createdAvailability = await _availabilityRepository.CreateAvailabilityAsync(availability);
-        return CreatedAtAction(nameof(GetAvailability), new { id = createdAvailability.Id }, new { success = true, data = new { id = createdAvailability.Id } });
+            var availability = new Availability
+            {
+                TenantId = dto.TenantId,
+                StaffId = dto.StaffId,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Note = dto.Note
+            };
+
+            var createdAvailability = await _availabilityRepository.CreateAvailabilityAsync(availability);
+            await _auditService.LogActionAsync("Availability", "Create", $"Created availability {createdAvailability.Id} for staff {dto.StaffId}", null, dto.TenantId);
+
+            return CreatedAtAction(nameof(GetAvailability), new { id = createdAvailability.Id }, new { success = true, data = new { id = createdAvailability.Id } });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", "Error creating availability", ex, dto.TenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // PUT: api/Availability/5
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateAvailability(int id, [FromBody] UpdateAvailabilityDto dto)
     {
-        var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
-        if (availability == null)
-            return NotFound(new { success = false, error = "Disponibilità non trovata" });
+        try
+        {
+            var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
+            if (availability == null)
+                return NotFound(new { success = false, error = "Disponibilità non trovata" });
 
-        if (dto.StartTime >= dto.EndTime)
-            return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
+            if (dto.StartTime >= dto.EndTime)
+                return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
 
-        availability.StaffId = dto.StaffId;
-        availability.StartTime = dto.StartTime;
-        availability.EndTime = dto.EndTime;
-        availability.Note = dto.Note;
+            availability.StaffId = dto.StaffId;
+            availability.StartTime = dto.StartTime;
+            availability.EndTime = dto.EndTime;
+            availability.Note = dto.Note;
 
-        await _availabilityRepository.UpdateAvailabilityAsync(availability);
-        return Ok(new { success = true, message = "Disponibilità aggiornata" });
+            await _availabilityRepository.UpdateAvailabilityAsync(availability);
+            await _auditService.LogActionAsync("Availability", "Update", $"Updated availability {id}", null, availability.TenantId);
+
+            return Ok(new { success = true, message = "Disponibilità aggiornata" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", $"Error updating availability {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // DELETE: api/Availability/5
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteAvailability(int id)
+    public async Task<IActionResult> DeleteAvailability(int id)
     {
-        await _availabilityRepository.DeleteAvailabilityAsync(id);
-        return Ok(new { success = true, message = "Disponibilità eliminata" });
+        try
+        {
+            await _availabilityRepository.DeleteAvailabilityAsync(id);
+            await _auditService.LogActionAsync("Availability", "Delete", $"Deleted availability {id}");
+            return Ok(new { success = true, message = "Disponibilità eliminata" });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", $"Error deleting availability {id}", ex);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Availability/slots
     [HttpGet("slots")]
     public async Task<ActionResult> GetAvailableSlots([FromQuery] Guid tenantId, [FromQuery] DateTime date, [FromQuery] int? serviceId, [FromQuery] int? staffId)
     {
-        var slots = await _availabilityRepository.GetAvailableSlotsAsync(tenantId, date, serviceId, staffId);
-        return Ok(new { success = true, data = slots });
+        try
+        {
+            var slots = await _availabilityRepository.GetAvailableSlotsAsync(tenantId, date, serviceId, staffId);
+            return Ok(new { success = true, data = slots });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", "Error retrieving available slots", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 
     // GET: api/Availability/week
     [HttpGet("week")]
     public async Task<ActionResult> GetWeekAvailability([FromQuery] Guid tenantId, [FromQuery] DateTime startDate)
     {
-        var availabilities = await _availabilityRepository.GetWeekAvailabilityAsync(tenantId, startDate);
-        var availabilityDtos = availabilities.Select(a => new AvailabilityListDto
+        try
         {
-            Id = a.Id,
-            TenantId = a.TenantId,
-            StaffId = a.StaffId,
-            StaffName = a.Staff != null ? a.Staff.Name : null,
-            StartTime = a.StartTime,
-            EndTime = a.EndTime,
-            Note = a.Note
-        });
-        return Ok(new { success = true, data = availabilityDtos });
+            var availabilities = await _availabilityRepository.GetWeekAvailabilityAsync(tenantId, startDate);
+            var availabilityDtos = availabilities.Select(a => new AvailabilityListDto
+            {
+                Id = a.Id,
+                TenantId = a.TenantId,
+                StaffId = a.StaffId,
+                StaffName = a.Staff != null ? a.Staff.Name : null,
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                Note = a.Note
+            });
+            return Ok(new { success = true, data = availabilityDtos });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Availability", "Error retrieving week availability", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 }

@@ -1,3 +1,5 @@
+using WorkBotAI.API.DTOs;
+using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
@@ -8,11 +10,13 @@ namespace WorkBotAI.API.Controllers;
 public class SystemSettingsController : ControllerBase
 {
     private readonly ISystemSettingRepository _repository;
+    private readonly IAuditService _auditService;
     private readonly ILogger<SystemSettingsController> _logger;
 
-    public SystemSettingsController(ISystemSettingRepository repository, ILogger<SystemSettingsController> logger)
+    public SystemSettingsController(ISystemSettingRepository repository, IAuditService auditService, ILogger<SystemSettingsController> logger)
     {
         _repository = repository;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -86,6 +90,7 @@ public class SystemSettingsController : ControllerBase
         try
         {
             await _repository.UpdateSettingsAsync(settings);
+            await _auditService.LogActionAsync("SystemSettings", "UpdateAll", "Updated multiple system settings");
             return Ok(new { success = true, message = "Impostazioni aggiornate" });
         }
         catch (Exception ex)
@@ -102,6 +107,7 @@ public class SystemSettingsController : ControllerBase
         try
         {
             await _repository.UpdateSettingAsync(category, key, value);
+            await _auditService.LogActionAsync("SystemSettings", "Update", $"Updated setting {category}/{key} to {value}");
             return Ok(new { success = true, message = "Impostazione aggiornata" });
         }
         catch (Exception ex)

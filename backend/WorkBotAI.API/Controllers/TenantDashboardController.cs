@@ -1,165 +1,76 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WorkbotAI.Models;
-using WorkBotAI.Repositories.DataAccess;
+using WorkBotAI.API.DTOs;
+using WorkBotAI.API.Services;
+using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 
 namespace WorkBotAI.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TenantDashboardController : ControllerBase
 {
-    private readonly WorkBotAIContext _context;
+    private readonly ITenantDashboardRepository _dashboardRepository;
+    private readonly ITenantRepository _tenantRepository;
+    private readonly IAuditService _auditService;
 
-    public TenantDashboardController(WorkBotAIContext context)
+    public TenantDashboardController(
+        ITenantDashboardRepository dashboardRepository,
+        ITenantRepository tenantRepository,
+        IAuditService auditService)
     {
-        _context = context;
+        _dashboardRepository = dashboardRepository;
+        _tenantRepository = tenantRepository;
+        _auditService = auditService;
     }
 
-    // GET: api/TenantDashboard/stats/{tenantId}
-    [HttpGet("stats/{tenantId}")]
-    public async Task<ActionResult> GetStats(Guid tenantId)
+    [HttpGet("{tenantId}")]
+    public async Task<ActionResult<TenantDashboardDto>> GetDashboardData(Guid tenantId)
     {
-        // Verifica che il tenant esista
-        var tenant = await _context.Tenants.FindAsync(tenantId);
-        if (tenant == null)
+        try
         {
-            return NotFound(new { success = false, error = "Tenant non trovato" });
+            var tenant = await _tenantRepository.GetTenantByIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { success = false, error = "Tenant non trovato" });
+            }
+
+            var stats = await _dashboardRepository.GetStatsAsync(tenantId);
+            var upcoming = await _dashboardRepository.GetUpcomingAppointmentsAsync(tenantId, 5);
+            var recent = await _dashboardRepository.GetRecentAppointmentsAsync(tenantId, 5);
+
+            var result = new TenantDashboardDto
+            {
+                TenantId = tenantId,
+                TenantName = tenant.Name,
+                Stats = stats,
+                UpcomingAppointments = upcoming.Select(a => new WorkBotAI.API.DTOs.AppointmentListDto
+                {
+                    Id = a.Id,
+                    CustomerName = a.Customer?.FullName,
+                    StaffName = a.Staff?.Name,
+                    StartTime = a.StartTime,
+                    EndTime = a.EndTime,
+                    StatusName = a.Status?.Name
+                }).ToList(),
+                RecentAppointments = recent.Select(a => new WorkBotAI.API.DTOs.AppointmentListDto
+                {
+                    Id = a.Id,
+                    CustomerName = a.Customer?.FullName,
+                    StaffName = a.Staff?.Name,
+                    StartTime = a.StartTime,
+                    EndTime = a.EndTime,
+                    StatusName = a.Status?.Name
+                }).ToList()
+            };
+
+            return Ok(new { success = true, data = result });
         }
-
-        var today = DateTime.Today;
-        var tomorrow = today.AddDays(1);
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + 1); // Lunedì
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
-
-        // Query base per gli appuntamenti del tenant
-        var appointmentsQuery = _context.Appointments
-            .Where(a => a.TenantId == tenantId && a.IsDeleted != true);
-
-        // Statistiche appuntamenti
-        var appointmentsToday = await appointmentsQuery
-            .Where(a => a.StartTime >= today && a.StartTime < tomorrow)
-            .CountAsync();
-
-        var appointmentsWeek = await appointmentsQuery
-            .Where(a => a.StartTime >= startOfWeek && a.StartTime < tomorrow)
-            .CountAsync();
-
-        var appointmentsMonth = await appointmentsQuery
-            .Where(a => a.StartTime >= startOfMonth && a.StartTime < tomorrow)
-            .CountAsync();
-
-        // Statistiche per stato
-        var completedAppointments = await appointmentsQuery
-            .Where(a => a.Status != null && a.Status.Name == "completed")
-            .CountAsync();
-
-        var pendingAppointments = await appointmentsQuery
-            .Where(a => a.Status != null && a.Status.Name == "pending")
-            .CountAsync();
-
-        var cancelledAppointments = await appointmentsQuery
-            .Where(a => a.Status != null && a.Status.Name == "cancelled")
-            .CountAsync();
-
-        // Totale clienti del tenant
-        var customersTotal = await _context.Customers
-            .Where(c => c.TenantId == tenantId && c.IsDeleted != true)
-            .CountAsync();
-
-        var stats = new TenantDashboardStatsDto
+        catch (Exception ex)
         {
-            AppointmentsToday = appointmentsToday,
-            AppointmentsWeek = appointmentsWeek,
-            AppointmentsMonth = appointmentsMonth,
-            CustomersTotal = customersTotal,
-            CompletedAppointments = completedAppointments,
-            PendingAppointments = pendingAppointments,
-            CancelledAppointments = cancelledAppointments
-        };
-
-        return Ok(new { success = true, data = stats });
-    }
-
-    // GET: api/TenantDashboard/appointments/{tenantId}/upcoming
-    [HttpGet("appointments/{tenantId}/upcoming")]
-    public async Task<ActionResult> GetUpcomingAppointments(Guid tenantId, [FromQuery] int limit = 5)
-    {
-        var now = DateTime.Now;
-
-        var appointments = await _context.Appointments
-            .Where(a => a.TenantId == tenantId && a.IsDeleted != true && a.StartTime >= now)
-            .Include(a => a.Customer)
-            .Include(a => a.Staff)
-            .Include(a => a.Status)
-            .OrderBy(a => a.StartTime)
-            .Take(limit)
-            .Select(a => new TenantAppointmentDto
-            {
-                Id = a.Id,
-                CustomerName = a.Customer != null ? a.Customer.FullName : null,
-                StaffName = a.Staff != null ? a.Staff.Name : null,
-                StatusName = a.Status != null ? a.Status.Name : null,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Note = a.Note
-            })
-            .ToListAsync();
-
-        return Ok(new { success = true, data = appointments });
-    }
-
-    // GET: api/TenantDashboard/appointments/{tenantId}/today
-    [HttpGet("appointments/{tenantId}/today")]
-    public async Task<ActionResult> GetTodayAppointments(Guid tenantId)
-    {
-        var today = DateTime.Today;
-        var tomorrow = today.AddDays(1);
-
-        var appointments = await _context.Appointments
-            .Where(a => a.TenantId == tenantId && a.IsDeleted != true && a.StartTime >= today && a.StartTime < tomorrow)
-            .Include(a => a.Customer)
-            .Include(a => a.Staff)
-            .Include(a => a.Status)
-            .OrderBy(a => a.StartTime)
-            .Select(a => new TenantAppointmentDto
-            {
-                Id = a.Id,
-                CustomerName = a.Customer != null ? a.Customer.FullName : null,
-                StaffName = a.Staff != null ? a.Staff.Name : null,
-                StatusName = a.Status != null ? a.Status.Name : null,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Note = a.Note
-            })
-            .ToListAsync();
-
-        return Ok(new { success = true, data = appointments, count = appointments.Count });
-    }
-
-    // GET: api/TenantDashboard/appointments/{tenantId}/recent
-    [HttpGet("appointments/{tenantId}/recent")]
-    public async Task<ActionResult> GetRecentAppointments(Guid tenantId, [FromQuery] int limit = 10)
-    {
-        var appointments = await _context.Appointments
-            .Where(a => a.TenantId == tenantId && a.IsDeleted != true)
-            .Include(a => a.Customer)
-            .Include(a => a.Staff)
-            .Include(a => a.Status)
-            .OrderByDescending(a => a.StartTime)
-            .Take(limit)
-            .Select(a => new TenantAppointmentDto
-            {
-                Id = a.Id,
-                CustomerName = a.Customer != null ? a.Customer.FullName : null,
-                StaffName = a.Staff != null ? a.Staff.Name : null,
-                StatusName = a.Status != null ? a.Status.Name : null,
-                StartTime = a.StartTime,
-                EndTime = a.EndTime,
-                Note = a.Note
-            })
-            .ToListAsync();
-
-        return Ok(new { success = true, data = appointments });
+            await _auditService.LogErrorAsync("Dashboard", $"Error retrieving dashboard for {tenantId}", ex, tenantId);
+            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+        }
     }
 }

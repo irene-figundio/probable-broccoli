@@ -58,6 +58,9 @@ builder.Services.AddDbContext<WorkBotAIContext>(options =>
 
 // Registra Repositories
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ITenantDashboardRepository, TenantDashboardRepository>();
+builder.Services.AddScoped<ITenantFaqRepository, TenantFaqRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -73,7 +76,12 @@ builder.Services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-// Registra AuthService
+builder.Services.AddHttpContextAccessor();
+
+// Registra Services
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
 builder.Services.AddScoped<AuthService>();
 
 // Configurazione JWT

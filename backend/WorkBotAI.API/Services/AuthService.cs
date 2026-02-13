@@ -12,11 +12,15 @@ public class AuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IAuditService _auditService;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IConfiguration configuration, IPasswordHasher passwordHasher, IAuditService auditService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _passwordHasher = passwordHasher;
+        _auditService = auditService;
     }
 
     public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
@@ -28,6 +32,7 @@ public class AuthService
 
             if (user == null)
             {
+                await _auditService.LogActionAsync("Auth", "Login", $"Attempted login for non-existent user: {loginDto.Email}");
                 return new LoginResponseDto
                 {
                     Success = false,
@@ -35,9 +40,10 @@ public class AuthService
                 };
             }
 
-            // Verifica password (confronto semplice per ora)
-            if (user.Password != loginDto.Password)
+            // Verifica password
+            if (!_passwordHasher.VerifyPassword(loginDto.Password, user.Password))
             {
+                await _auditService.LogActionAsync("Auth", "Login", $"Failed login attempt for user: {loginDto.Email}", null, user.TenantId, user.Id);
                 return new LoginResponseDto
                 {
                     Success = false,
@@ -60,6 +66,8 @@ public class AuthService
 
             // Determina se è super admin
             var isSuperAdmin = user.IsSuperAdmin == true || user.RoleId == 1;
+
+            await _auditService.LogActionAsync("Auth", "Login", $"Successful login for user: {loginDto.Email}", null, user.TenantId, user.Id);
 
             return new LoginResponseDto
             {
