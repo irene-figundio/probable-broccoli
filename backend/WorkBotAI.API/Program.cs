@@ -24,6 +24,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "WorkBotAI API", Version = "v1" });
+    c.CustomSchemaIds(type => type.FullName);
 
     // Configurazione JWT per Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
