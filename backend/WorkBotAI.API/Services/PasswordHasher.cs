@@ -17,7 +17,19 @@ namespace WorkBotAI.API.Services
 
         public bool VerifyPassword(string password, string hashedPassword)
         {
-            return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
+            if (string.IsNullOrEmpty(hashedPassword)) return false;
+
+            try
+            {
+                return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
+            }
+            catch (Exception)
+            {
+                // In case the password in the database is not a valid BCrypt hash (e.g. legacy plain text)
+                // we return false to prevent crashing.
+                // For hardening, we should not allow plain text login.
+                return false;
+            }
         }
     }
 }
