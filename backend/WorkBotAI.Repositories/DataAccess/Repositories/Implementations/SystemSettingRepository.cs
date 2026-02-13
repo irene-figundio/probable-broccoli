@@ -63,54 +63,76 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
 
         public async Task UpdateSettingsAsync(Dictionary<string, Dictionary<string, string?>> settings)
         {
-            foreach (var category in settings)
+            try
             {
-                foreach (var kvp in category.Value)
+                foreach (var category in settings)
                 {
-                    var existing = await _context.SystemSettings
-                        .FirstOrDefaultAsync(s => s.Category == category.Key && s.Key == kvp.Key);
+                    foreach (var kvp in category.Value)
+                    {
+                        var existing = await _context.SystemSettings
+                            .FirstOrDefaultAsync(s => s.Category == category.Key && s.Key == kvp.Key);
 
-                    if (existing != null)
-                    {
-                        existing.Value = kvp.Value;
-                        existing.UpdatedAt = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        _context.SystemSettings.Add(new SystemSetting
+                        if (existing != null)
                         {
-                            Category = category.Key,
-                            Key = kvp.Key,
-                            Value = kvp.Value,
-                            UpdatedAt = DateTime.UtcNow
-                        });
+                            existing.Value = kvp.Value;
+                            existing.UpdatedAt = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            _context.SystemSettings.Add(new SystemSetting
+                            {
+                                Category = category.Key,
+                                Key = kvp.Key,
+                                Value = kvp.Value,
+                                UpdatedAt = DateTime.UtcNow
+                            });
+                        }
                     }
                 }
+                await _context.SaveChangesAsync();
             }
-            await _context.SaveChangesAsync();
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 208)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot update settings: SystemSettings table missing.");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot find settings to update: SystemSettings table missing.");
+            }
         }
 
         public async Task UpdateSettingAsync(string category, string key, string? value)
         {
-            var setting = await _context.SystemSettings
-                .FirstOrDefaultAsync(s => s.Category == category && s.Key == key);
+            try
+            {
+                var setting = await _context.SystemSettings
+                    .FirstOrDefaultAsync(s => s.Category == category && s.Key == key);
 
-            if (setting == null)
-            {
-                _context.SystemSettings.Add(new SystemSetting
+                if (setting == null)
                 {
-                    Category = category,
-                    Key = key,
-                    Value = value,
-                    UpdatedAt = DateTime.UtcNow
-                });
+                    _context.SystemSettings.Add(new SystemSetting
+                    {
+                        Category = category,
+                        Key = key,
+                        Value = value,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    setting.Value = value;
+                    setting.UpdatedAt = DateTime.UtcNow;
+                }
+                await _context.SaveChangesAsync();
             }
-            else
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 208)
             {
-                setting.Value = value;
-                setting.UpdatedAt = DateTime.UtcNow;
+                System.Diagnostics.Debug.WriteLine("Cannot update setting: SystemSettings table missing.");
             }
-            await _context.SaveChangesAsync();
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 208)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot find setting to update: SystemSettings table missing.");
+            }
         }
 
         public async Task EnsureDefaultSettingsAsync()
@@ -136,8 +158,10 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
 
         public async Task SeedDefaultSettingsAsync()
         {
-            var defaultSettings = new List<SystemSetting>
+            try
             {
+                var defaultSettings = new List<SystemSetting>
+                {
                 // General
                 new() { Category = "general", Key = "platformName", Value = "WorkBotAI", Description = "Nome della piattaforma" },
                 new() { Category = "general", Key = "supportEmail", Value = "support@workbotai.com", Description = "Email supporto" },
@@ -177,8 +201,13 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
                 new() { Category = "appearance", Key = "faviconUrl", Value = "", Description = "URL favicon" }
             };
 
-            _context.SystemSettings.AddRange(defaultSettings);
-            await _context.SaveChangesAsync();
+                _context.SystemSettings.AddRange(defaultSettings);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 208)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot seed settings: SystemSettings table missing.");
+            }
         }
     }
 }
