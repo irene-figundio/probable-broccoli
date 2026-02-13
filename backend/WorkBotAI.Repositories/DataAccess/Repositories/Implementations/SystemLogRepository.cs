@@ -69,8 +69,21 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
 
         public async Task<SystemLog> CreateLogAsync(SystemLog log)
         {
-            _context.SystemLogs.Add(log);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.SystemLogs.Add(log);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx && sqlEx.Number == 208)
+            {
+                // Silently fail if table missing - we don't want to crash the app for a log entry
+                System.Diagnostics.Debug.WriteLine("Cannot save log: SystemLogs table missing.");
+                _context.Entry(log).State = EntityState.Detached; // Prevent tracking issues
+            }
+            catch (Exception)
+            {
+                // Other log-related errors should not crash the main flow
+            }
             return log;
         }
 
