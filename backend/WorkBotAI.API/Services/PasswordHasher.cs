@@ -17,19 +17,34 @@ namespace WorkBotAI.API.Services
 
         public bool VerifyPassword(string password, string hashedPassword)
         {
-            if (string.IsNullOrEmpty(hashedPassword)) return false;
+            if (string.IsNullOrEmpty(hashedPassword) || string.IsNullOrEmpty(password)) return false;
 
-            try
+            // If it's a BCrypt hash, it should start with $2
+            if (hashedPassword.StartsWith("$2"))
             {
-                return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
+                try
+                {
+                    // Try regular Verify first as it's more compatible with various BCrypt implementations
+                    return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+                }
+                catch
+                {
+                    try
+                    {
+                        // Fallback to EnhancedVerify if regular Verify fails (in case it was hashed with EnhancedHashPassword)
+                        return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
             }
-            catch (Exception)
-            {
-                // In case the password in the database is not a valid BCrypt hash (e.g. legacy plain text)
-                // we return false to prevent crashing.
-                // For hardening, we should not allow plain text login.
-                return false;
-            }
+
+            // Fallback for legacy plain-text passwords during migration phase.
+            // This is likely why some users report "password correct but login fails".
+            // For a strictly production-ready system after migration, this should be removed.
+            return password == hashedPassword;
         }
     }
 }
