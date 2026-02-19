@@ -1,4 +1,4 @@
-namespace WorkBotAI.API.Persistence
+namespace WorkBotAI.Persistence
 {
     public class ServiceResponse<T>
     {

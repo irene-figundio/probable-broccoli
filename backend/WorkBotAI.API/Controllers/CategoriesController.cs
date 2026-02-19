@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using WorkbotAI.Models;
 using WorkBotAI.API.DTOs;
-using WorkBotAI.API.Persistence;
+using WorkBotAI.Persistence.Repositories;
 using WorkBotAI.API.Services;
+using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,26 +14,26 @@ namespace WorkBotAI.API.Controllers
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
     {
-        private readonly ICategoryPersistence _persistence;
+        private readonly ICategoryRepository _repository;
         private readonly IAuditService _auditService;
 
-        public CategoriesController(ICategoryPersistence persistence, IAuditService auditService)
+        public CategoriesController([FromKeyedServices("http")] ICategoryRepository repository, IAuditService auditService)
         {
-            _persistence = persistence;
+            _repository = repository;
             _auditService = auditService;
         }
 
         [HttpGet]
         public async Task<ActionResult> GetCategories()
         {
-            var data = await _persistence.GetAllAsync();
+            var data = await _repository.GetAllAsync();
             return Ok(new { success = true, data });
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult> GetCategory(int id)
         {
-            var data = await _persistence.GetByIdAsync(id);
+            var data = await _repository.GetByIdAsync(id);
             if (data == null) return NotFound(new { success = false, error = "Category not found" });
             return Ok(new { success = true, data });
         }
@@ -42,13 +44,11 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            var success = await _persistence.CreateAsync(dto);
-            if (success)
-            {
-                await _auditService.LogActionAsync("Categories", "Create", $"Created category {dto.Name}", null, null, userId);
-                return Ok(new { success = true, message = "Category created" });
-            }
-            return StatusCode(500, new { success = false, error = "Error creating category" });
+            var category = new Category { Name = dto.Name, IsActive = dto.IsActive };
+            var created = await _repository.CreateAsync(category);
+
+            await _auditService.LogActionAsync("Categories", "Create", $"Created category {created.Name}", null, null, userId);
+            return Ok(new { success = true, data = created });
         }
 
         [HttpPut("{id}")]
@@ -57,13 +57,11 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            var success = await _persistence.UpdateAsync(id, dto);
-            if (success)
-            {
-                await _auditService.LogActionAsync("Categories", "Update", $"Updated category {dto.Name}", null, null, userId);
-                return Ok(new { success = true, message = "Category updated" });
-            }
-            return NotFound(new { success = false, error = "Category not found or update error" });
+            var category = new Category { Id = id, Name = dto.Name, IsActive = dto.IsActive };
+            await _repository.UpdateAsync(category);
+
+            await _auditService.LogActionAsync("Categories", "Update", $"Updated category {dto.Name}", null, null, userId);
+            return Ok(new { success = true, message = "Category updated" });
         }
 
         [HttpDelete("{id}")]
@@ -72,13 +70,10 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            var success = await _persistence.DeleteAsync(id);
-            if (success)
-            {
-                await _auditService.LogActionAsync("Categories", "Delete", $"Deleted category ID {id}", null, null, userId);
-                return Ok(new { success = true, message = "Category deleted" });
-            }
-            return NotFound(new { success = false, error = "Category not found or delete error" });
+            await _repository.DeleteAsync(id);
+
+            await _auditService.LogActionAsync("Categories", "Delete", $"Deleted category ID {id}", null, null, userId);
+            return Ok(new { success = true, message = "Category deleted" });
         }
     }
 }

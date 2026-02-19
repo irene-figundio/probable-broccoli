@@ -9,7 +9,7 @@ using WorkBotAI.Repositories.DataAccess;
 using WorkBotAI.API.Services;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 using WorkBotAI.Repositories.DataAccess.Repositories.Implementations;
-using WorkBotAI.API.Persistence;
+using WorkBotAI.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,8 +72,14 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IFaqRepository, FaqRepository>();
 builder.Services.AddScoped<IRegisterRepository, RegisterRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IJobTypeRepository, JobTypeRepository>();
+
+// Repositories con Keyed Services per distinguere EF da Persistence (HttpClient)
+builder.Services.AddKeyedScoped<ICategoryRepository, CategoryRepository>("ef");
+builder.Services.AddKeyedScoped<IJobTypeRepository, JobTypeRepository>("ef");
+
+builder.Services.AddKeyedScoped<ICategoryRepository, CategoryPersistenceRepository>("http");
+builder.Services.AddKeyedScoped<IJobTypeRepository, JobTypePersistenceRepository>("http");
+
 builder.Services.AddScoped<ISettingRepository, SettingRepository>();
 builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 builder.Services.AddScoped<ISystemLogRepository, SystemLogRepository>();
@@ -87,11 +93,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<LogActionFilter>();
 
 // Configurazione Persistence Layer con Typed HttpClients
-builder.Services.AddHttpClient<ICategoryPersistence, CategoryPersistence>(client =>
+builder.Services.AddHttpClient<ICategoryRepository, CategoryPersistenceRepository>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001/");
 });
-builder.Services.AddHttpClient<IJobTypePersistence, JobTypePersistence>(client =>
+builder.Services.AddHttpClient<IJobTypeRepository, JobTypePersistenceRepository>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001/");
 });

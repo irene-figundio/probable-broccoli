@@ -15,48 +15,37 @@ namespace WorkBotAI.API.Controllers
     {
         private readonly ICategoryRepository _repository;
 
-        public InternalCategoriesController(ICategoryRepository repository)
+        public InternalCategoriesController([FromKeyedServices("ef")] ICategoryRepository repository)
         {
             _repository = repository;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
+        public async Task<ActionResult> GetCategories()
         {
             var categories = await _repository.GetAllAsync();
-            return Ok(new { success = true, data = categories.Select(c => new CategoryDto { Id = c.Id, Name = c.Name, IsActive = c.IsActive ?? false }) });
+            return Ok(new { success = true, data = categories });
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CategoryDto>> GetCategory(int id)
+        public async Task<ActionResult> GetCategory(int id)
         {
             var category = await _repository.GetByIdAsync(id);
             if (category == null) return NotFound(new { success = false, error = "Category not found" });
-            return Ok(new { success = true, data = new CategoryDto { Id = category.Id, Name = category.Name, IsActive = category.IsActive ?? false } });
+            return Ok(new { success = true, data = category });
         }
 
         [HttpPost]
-        public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto dto)
+        public async Task<ActionResult> CreateCategory(Category category)
         {
-            var category = new Category
-            {
-                Name = dto.Name,
-                IsActive = dto.IsActive
-            };
-
             var created = await _repository.CreateAsync(category);
             return CreatedAtAction(nameof(GetCategory), new { id = created.Id }, new { success = true, data = created });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, CategoryDto dto)
+        public async Task<IActionResult> UpdateCategory(int id, Category category)
         {
-            var category = await _repository.GetByIdAsync(id);
-            if (category == null) return NotFound(new { success = false, error = "Category not found" });
-
-            category.Name = dto.Name;
-            category.IsActive = dto.IsActive;
-
+            if (id != category.Id) return BadRequest();
             await _repository.UpdateAsync(category);
             return Ok(new { success = true, message = "Category updated" });
         }

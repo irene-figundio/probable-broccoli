@@ -15,49 +15,29 @@ namespace WorkBotAI.API.Controllers
     {
         private readonly IJobTypeRepository _repository;
 
-        public InternalJobTypesController(IJobTypeRepository repository)
+        public InternalJobTypesController([FromKeyedServices("ef")] IJobTypeRepository repository)
         {
             _repository = repository;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<JobTypeDto>>> GetJobTypes()
+        public async Task<ActionResult> GetJobTypes()
         {
             var jobTypes = await _repository.GetAllAsync();
-            return Ok(new { success = true, data = jobTypes.Select(j => new JobTypeDto {
-                Id = j.Id,
-                Name = j.Name,
-                IsActive = j.IsActive ?? false,
-                CategoryId = j.CategoryId,
-                Gender = j.Gender
-            }) });
+            return Ok(new { success = true, data = jobTypes });
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<JobTypeDto>> GetJobType(int id)
+        public async Task<ActionResult> GetJobType(int id)
         {
             var jobType = await _repository.GetByIdAsync(id);
             if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
-            return Ok(new { success = true, data = new JobTypeDto {
-                Id = jobType.Id,
-                Name = jobType.Name,
-                IsActive = jobType.IsActive ?? false,
-                CategoryId = jobType.CategoryId,
-                Gender = jobType.Gender
-            } });
+            return Ok(new { success = true, data = jobType });
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateJobType(CreateJobTypeDto dto)
+        public async Task<ActionResult> CreateJobType(JobType jobType)
         {
-            var jobType = new JobType
-            {
-                Name = dto.Name,
-                IsActive = dto.IsActive,
-                CategoryId = dto.CategoryId,
-                Gender = dto.Gender
-            };
-
             var created = await _repository.CreateAsync(jobType);
             return CreatedAtAction(nameof(GetJobType), new { id = created.Id }, new { success = true, data = created });
         }
@@ -80,17 +60,17 @@ namespace WorkBotAI.API.Controllers
             return Ok(new { success = true, count = jobTypesToCreate.Count });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateJobType(int id, CreateJobTypeDto dto)
+        [HttpPost("bulk-range")]
+        public async Task<ActionResult> CreateRange(IEnumerable<JobType> jobTypes)
         {
-            var jobType = await _repository.GetByIdAsync(id);
-            if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
+            await _repository.CreateRangeAsync(jobTypes);
+            return Ok(new { success = true });
+        }
 
-            jobType.Name = dto.Name;
-            jobType.IsActive = dto.IsActive;
-            jobType.CategoryId = dto.CategoryId;
-            jobType.Gender = dto.Gender;
-
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateJobType(int id, JobType jobType)
+        {
+            if (id != jobType.Id) return BadRequest();
             await _repository.UpdateAsync(jobType);
             return Ok(new { success = true, message = "JobType updated" });
         }
