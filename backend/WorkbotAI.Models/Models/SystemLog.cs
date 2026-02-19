@@ -23,4 +23,8 @@ public class SystemLog
     public string? IpAddress { get; set; }
     
     public string? UserAgent { get; set; }
+
+    public string? RequestJson { get; set; }
+
+    public string? ResponseJson { get; set; }
 }

@@ -67,6 +67,12 @@ public class AuthService
                 };
             }
 
+            // Aggiorna LastLogin e Status
+            user.LastLoginTime = DateTime.UtcNow;
+            user.StatusId = 1; // Active
+
+            await _userRepository.UpdateUserAsync(user);
+
             // Genera il token JWT
             var token = GenerateJwtToken(user);
 
