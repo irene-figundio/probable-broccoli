@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace WorkBotAI.Persistence.Repositories
 {
-    public class CategoryPersistenceRepository : ICategoryRepository
+    public class CategoryRepository : ICategoryRepository
     {
         private readonly HttpClient _httpClient;
 
-        public CategoryPersistenceRepository(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
+        public CategoryRepository(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = httpClient;
             var authHeader = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
@@ -23,31 +23,31 @@ namespace WorkBotAI.Persistence.Repositories
 
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            var response = await _httpClient.GetFromJsonAsync<ServiceResponse<IEnumerable<Category>>>("api/internal/categories");
+            var response = await _httpClient.GetFromJsonAsync<ServiceResponse<IEnumerable<Category>>>("api/Categories");
             return response?.Data ?? new List<Category>();
         }
 
         public async Task<Category?> GetByIdAsync(int id)
         {
-            var response = await _httpClient.GetFromJsonAsync<ServiceResponse<Category>>($"api/internal/categories/{id}");
+            var response = await _httpClient.GetFromJsonAsync<ServiceResponse<Category>>($"api/Categories/{id}");
             return response?.Data;
         }
 
         public async Task<Category> CreateAsync(Category category)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/internal/categories", category);
+            var response = await _httpClient.PostAsJsonAsync("api/Categories", category);
             var result = await response.Content.ReadFromJsonAsync<ServiceResponse<Category>>();
             return result?.Data ?? category;
         }
 
         public async Task UpdateAsync(Category category)
         {
-            await _httpClient.PutAsJsonAsync($"api/internal/categories/{category.Id}", category);
+            await _httpClient.PutAsJsonAsync($"api/Categories/{category.Id}", category);
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _httpClient.DeleteAsync($"api/internal/categories/{id}");
+            await _httpClient.DeleteAsync($"api/Categories/{id}");
         }
     }
 }

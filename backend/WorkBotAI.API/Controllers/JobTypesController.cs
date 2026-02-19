@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using WorkbotAI.Models;
 using WorkBotAI.API.DTOs;
-using WorkBotAI.Persistence.Repositories;
-using WorkBotAI.API.Services;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
+using WorkBotAI.API.Services;
 using System.Security.Claims;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace WorkBotAI.API.Controllers
@@ -17,7 +17,7 @@ namespace WorkBotAI.API.Controllers
         private readonly IJobTypeRepository _repository;
         private readonly IAuditService _auditService;
 
-        public JobTypesController([FromKeyedServices("http")] IJobTypeRepository repository, IAuditService auditService)
+        public JobTypesController(IJobTypeRepository repository, IAuditService auditService)
         {
             _repository = repository;
             _auditService = auditService;
@@ -26,16 +26,16 @@ namespace WorkBotAI.API.Controllers
         [HttpGet]
         public async Task<ActionResult> GetJobTypes()
         {
-            var data = await _repository.GetAllAsync();
-            return Ok(new { success = true, data });
+            var jobTypes = await _repository.GetAllAsync();
+            return Ok(new { success = true, data = jobTypes });
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult> GetJobType(int id)
         {
-            var data = await _repository.GetByIdAsync(id);
-            if (data == null) return NotFound(new { success = false, error = "JobType not found" });
-            return Ok(new { success = true, data });
+            var jobType = await _repository.GetByIdAsync(id);
+            if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
+            return Ok(new { success = true, data = jobType });
         }
 
         [HttpPost]
@@ -44,11 +44,18 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            var jobType = new JobType { Name = dto.Name, Gender = dto.Gender, IsActive = dto.IsActive, CategoryId = dto.CategoryId };
-            var created = await _repository.CreateAsync(jobType);
+            var jobType = new JobType
+            {
+                Name = dto.Name,
+                IsActive = dto.IsActive,
+                CategoryId = dto.CategoryId,
+                Gender = dto.Gender
+            };
 
+            var created = await _repository.CreateAsync(jobType);
             await _auditService.LogActionAsync("JobTypes", "Create", $"Created JobType {created.Name}", null, null, userId);
-            return Ok(new { success = true, data = created });
+
+            return CreatedAtAction(nameof(GetJobType), new { id = created.Id }, new { success = true, data = created });
         }
 
         [HttpPost("bulk")]
@@ -61,6 +68,7 @@ namespace WorkBotAI.API.Controllers
             }
 
             var jobTypesToCreate = new List<JobType>();
+
             if (dto.M) jobTypesToCreate.Add(new JobType { Name = dto.Descrizione, Gender = "M", CategoryId = dto.CategoryId, IsActive = true });
             if (dto.F) jobTypesToCreate.Add(new JobType { Name = dto.Descrizione, Gender = "F", CategoryId = dto.CategoryId, IsActive = true });
             if (dto.U) jobTypesToCreate.Add(new JobType { Name = dto.Descrizione, Gender = "U", CategoryId = dto.CategoryId, IsActive = true });
@@ -71,8 +79,17 @@ namespace WorkBotAI.API.Controllers
             }
 
             await _repository.CreateRangeAsync(jobTypesToCreate);
-            await _auditService.LogActionAsync("JobTypes", "BulkCreate", $"Bulk created JobTypes for {dto.Descrizione}", null, null, userId);
-            return Ok(new { success = true, message = "Bulk creation successful" });
+            await _auditService.LogActionAsync("JobTypes", "BulkCreate", $"Created {jobTypesToCreate.Count} JobTypes for {dto.Descrizione}", null, null, userId);
+
+            return Ok(new { success = true, count = jobTypesToCreate.Count });
+        }
+
+        [HttpPost("bulk-range")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<ActionResult> CreateRange(IEnumerable<JobType> jobTypes)
+        {
+            await _repository.CreateRangeAsync(jobTypes);
+            return Ok(new { success = true });
         }
 
         [HttpPut("{id}")]
@@ -81,10 +98,17 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            var jobType = new JobType { Id = id, Name = dto.Name, Gender = dto.Gender, IsActive = dto.IsActive, CategoryId = dto.CategoryId };
-            await _repository.UpdateAsync(jobType);
+            var jobType = await _repository.GetByIdAsync(id);
+            if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
 
-            await _auditService.LogActionAsync("JobTypes", "Update", $"Updated JobType {dto.Name}", null, null, userId);
+            jobType.Name = dto.Name;
+            jobType.IsActive = dto.IsActive;
+            jobType.CategoryId = dto.CategoryId;
+            jobType.Gender = dto.Gender;
+
+            await _repository.UpdateAsync(jobType);
+            await _auditService.LogActionAsync("JobTypes", "Update", $"Updated JobType {jobType.Name}", null, null, userId);
+
             return Ok(new { success = true, message = "JobType updated" });
         }
 
@@ -94,9 +118,12 @@ namespace WorkBotAI.API.Controllers
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdStr, out var userId);
 
-            await _repository.DeleteAsync(id);
+            var jobType = await _repository.GetByIdAsync(id);
+            if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
 
-            await _auditService.LogActionAsync("JobTypes", "Delete", $"Deleted JobType ID {id}", null, null, userId);
+            await _repository.DeleteAsync(id);
+            await _auditService.LogActionAsync("JobTypes", "Delete", $"Deleted JobType {jobType.Name}", null, null, userId);
+
             return Ok(new { success = true, message = "JobType deleted" });
         }
     }

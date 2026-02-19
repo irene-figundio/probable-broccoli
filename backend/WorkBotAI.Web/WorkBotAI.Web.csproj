@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\WorkbotAI.Models\WorkbotAI.Models.csproj" />
+    <ProjectReference Include="..\WorkBotAI.Persistence\WorkBotAI.Persistence.csproj" />
+    <ProjectReference Include="..\WorkBotAI.Repositories\WorkBotAI.Repositories.csproj" />
+    <ProjectReference Include="..\WorkBotAI.API\WorkBotAI.API.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
