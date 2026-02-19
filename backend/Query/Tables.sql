@@ -472,6 +472,8 @@ CREATE TABLE [dbo].[SystemLogs](
 	[TenantId] [uniqueidentifier] NULL,
 	[IpAddress] [nvarchar](50) NULL,
 	[UserAgent] [nvarchar](max) NULL,
+	[RequestJson] [nvarchar](max) NULL,
+	[ResponseJson] [nvarchar](max) NULL,
 PRIMARY KEY CLUSTERED ([ID] ASC)) ON [PRIMARY]
 GO
 
