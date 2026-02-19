@@ -85,9 +85,10 @@ public partial class WorkBotAIContext : DbContext
     public virtual DbSet<SystemSetting> SystemSettings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS01;Database=WorkBotAI_N;User ID=sa;Password=ed+4pv7ah3nJC+86;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;");
-        //=> optionsBuilder.UseSqlServer("Server=Hellboy\\SQLEXPRESS;Database=WorkBotAI_N;User Id=sa;Password=sa1;TrustServerCertificate=True");
+    {
+        // Configurazione spostata in Program.cs tramite Dependency Injection.
+        // OnConfiguring lasciato vuoto o per configurazioni specifiche non legate alla connection string.
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -661,6 +662,8 @@ public partial class WorkBotAIContext : DbContext
             entity.Property(e => e.TenantId).HasColumnName("TenantID");
             entity.Property(e => e.IpAddress).HasMaxLength(50);
             entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.RequestJson).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.ResponseJson).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<SystemSetting>(entity =>
