@@ -39,11 +39,16 @@ public class AuthService
                     Error = "Utente non trovato"
                 };
             }
+            var pwd = "Admin123!";
+            var hash = BCrypt.Net.BCrypt.HashPassword(pwd);
+
+            Console.WriteLine(hash);
+            Console.WriteLine(BCrypt.Net.BCrypt.Verify(pwd, hash));
 
             // Verifica password
             if (!_passwordHasher.VerifyPassword(loginDto.Password, user.Password))
             {
-                await _auditService.LogActionAsync("Auth", "Login", $"Failed login attempt for user: {loginDto.Email}", null, user.TenantId, user.Id);
+                await _auditService.LogErrorAsync("Auth - Login", $"Failed login attempt for user: {loginDto.Email}", null, user.TenantId, user.Id);
                 return new LoginResponseDto
                 {
                     Success = false,
@@ -54,6 +59,7 @@ public class AuthService
             // Verifica se l'utente è attivo
             if (user.IsActive != true)
             {
+                await _auditService.LogErrorAsync("Auth - Login", $"Utente non attivo: {loginDto.Email}", null, user.TenantId, user.Id);
                 return new LoginResponseDto
                 {
                     Success = false,
@@ -87,6 +93,7 @@ public class AuthService
         }
         catch (Exception ex)
         {
+            await _auditService.LogErrorAsync("Auth - Login", $"Failed login attempt for user: {loginDto.Email}", ex, null, null);
             return new LoginResponseDto
             {
                 Success = false,

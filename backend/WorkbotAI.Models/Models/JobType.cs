@@ -13,6 +13,9 @@ public partial class JobType
 
     public int? CategoryId { get; set; }
 
+    public string Gender { get; set; } = "U";   // nvarchar(1)
+
+
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<Staff> Staff { get; set; } = new List<Staff>();

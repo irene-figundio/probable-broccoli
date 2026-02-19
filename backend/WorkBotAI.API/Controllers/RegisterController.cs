@@ -12,7 +12,7 @@ using WorkBotAI.API.Services;
 
 namespace WorkBotAI.API.Controllers;
 
-[AllowAnonymous]
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class RegisterController : ControllerBase
@@ -36,12 +36,21 @@ public class RegisterController : ControllerBase
     {
         try
         {
-            if (string.IsNullOrEmpty(dto.BusinessName)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Nome attività obbligatorio" });
-            if (string.IsNullOrEmpty(dto.OwnerEmail)) return BadRequest(new RegisterResponseDto { Success = false, Error = "Email obbligatoria" });
+            if (string.IsNullOrEmpty(dto.BusinessName))
+            {
+                await _auditService.LogErrorAsync("Register - RegisterTenant", "Attempted registration with missing business name");
+                return BadRequest(new RegisterResponseDto { Success = false, Error = "Nome attività obbligatorio" });
+            }
+            if (string.IsNullOrEmpty(dto.OwnerEmail))
+            {
+                await _auditService.LogErrorAsync("Register - RegisterTenant", "Attempted registration with missing email");
+                return BadRequest(new RegisterResponseDto { Success = false, Error = "Email obbligatoria" });
+            }
 
             var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.OwnerPassword);
             if (!isPasswordValid)
             {
+                await _auditService.LogErrorAsync("Register - RegisterTenant", $"Attempted registration with invalid password: {passwordError}");
                 return BadRequest(new RegisterResponseDto { Success = false, Error = passwordError });
             }
 
@@ -82,6 +91,12 @@ public class RegisterController : ControllerBase
     public async Task<ActionResult> GetCategories()
     {
         var categories = await _registerRepository.GetCategoriesAsync();
+        if (categories == null || !categories.Any())
+        {
+            await _auditService.LogErrorAsync("Register - RegisterTenant", "No categories found");
+            return Ok(new { success = true, data = Array.Empty<object>() });
+        }
+
         return Ok(new { success = true, data = categories.Select(c => new { c.Id, c.Name }) });
     }
 

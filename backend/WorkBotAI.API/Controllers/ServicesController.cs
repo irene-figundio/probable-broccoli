@@ -28,6 +28,12 @@ public class ServicesController : ControllerBase
         try
         {
             var services = await _serviceRepository.GetServicesAsync(tenantId, search, categoryId);
+            if (services == null) {
+                await _auditService.LogActionAsync("Services", "GetServices", "No services found", null, tenantId);
+                return Ok(new { success = true, data = Array.Empty<ServiceListDto>(), count = 0 });
+            } else {
+                await _auditService.LogActionAsync("Services", "GetServices", $"Retrieved {services.Count()} services", null, tenantId);
+            }
             return Ok(new { success = true, data = services, count = services.Count() });
         }
         catch (Exception ex)
@@ -45,7 +51,9 @@ public class ServicesController : ControllerBase
         {
             var service = await _serviceRepository.GetServiceByIdAsync(id);
             if (service == null)
+            {   await _auditService.LogActionAsync("Services", "GetService", $"Service {id} not found", null, service?.TenantId);
                 return NotFound(new { success = false, error = "Servizio non trovato" });
+            }
 
             var dto = new ServiceDetailDto
             {
@@ -127,7 +135,9 @@ public class ServicesController : ControllerBase
         {
             var service = await _serviceRepository.GetServiceByIdAsync(id);
             if (service == null)
-                return NotFound(new { success = false, error = "Servizio non trovato" });
+            {       await _auditService.LogActionAsync("Services", "Update", $"Service {id} not found for update", null, service?.TenantId);
+                    return NotFound(new { success = false, error = "Servizio non trovato" });
+            }
 
             service.CategoryId = dto.CategoryId;
             service.Name = dto.Name;
@@ -156,6 +166,11 @@ public class ServicesController : ControllerBase
     {
         try
         {
+            var service = await _serviceRepository.GetServiceByIdAsync(id);            
+            if (service == null)
+            {       await _auditService.LogErrorAsync("Services - Delete", $"Service {id} not found for deletion", null, service?.TenantId);
+                    return NotFound(new { success = false, error = "Servizio non trovato" });
+            }
             await _serviceRepository.DeleteServiceAsync(id);
             await _auditService.LogActionAsync("Services", "Delete", $"Deleted service {id}");
             return Ok(new { success = true, message = "Servizio eliminato" });
@@ -209,6 +224,12 @@ public class ServicesController : ControllerBase
         try
         {
             var categories = await _serviceRepository.GetCategoriesAsync();
+            if (categories == null) {
+                await _auditService.LogActionAsync("Services", "GetCategories", "No service categories found");
+                return Ok(new { success = true, data = Array.Empty<object>() });
+            } else {
+                await _auditService.LogActionAsync("Services", "GetCategories", $"Retrieved {categories.Count()} service categories");
+            }
             return Ok(new { success = true, data = categories.Select(c => new { c.Id, c.Name }) });
         }
         catch (Exception ex)

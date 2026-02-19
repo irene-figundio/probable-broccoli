@@ -28,6 +28,12 @@ public class FaqController : ControllerBase
         try
         {
             var faqs = await _faqRepository.GetFaqsAsync(categoryId, isActive);
+            if (faqs == null) {
+                await _auditService.LogErrorAsync("Faq - GetFaqs", "No FAQs found", null, null, null);
+                return NotFound(new { success = false, error = "Nessuna FAQ trovata" });
+            } else {
+                await _auditService.LogActionAsync("Faq", "Get", $"Retrieved {faqs.Count()} FAQs", null, null);
+            }
             var faqDtos = faqs.Select(f => new FaqListDto
             {
                 Id = f.Id,
@@ -53,7 +59,12 @@ public class FaqController : ControllerBase
         {
             var faq = await _faqRepository.GetFaqByIdAsync(id);
             if (faq == null)
+            {
+                await _auditService.LogErrorAsync("Faq - GetFaq", $"FAQ not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "FAQ non trovata" });
+            } else {
+                await _auditService.LogActionAsync("Faq", "Get", $"Retrieved FAQ {id}", null, null);
+            }
 
             var result = new FaqDetailDto
             {
@@ -89,7 +100,11 @@ public class FaqController : ControllerBase
         try
         {
             if (string.IsNullOrWhiteSpace(dto.Question))
+            {
+                await _auditService.LogErrorAsync("Faq - CreateFaq", "Question is required", null, null, null);
                 return BadRequest(new { success = false, error = "La domanda è obbligatoria" });
+            } 
+            await _auditService.LogActionAsync("Faq", "Create", "Creating new FAQ", null, null);
 
             var faq = new Faq
             {
@@ -128,10 +143,16 @@ public class FaqController : ControllerBase
         {
             var faq = await _faqRepository.GetFaqByIdAsync(id);
             if (faq == null)
+            {
+                await _auditService.LogErrorAsync("Faq - UpdateFaq", $"FAQ not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "FAQ non trovata" });
+            }
 
             if (string.IsNullOrWhiteSpace(dto.Question))
+            {
+                await _auditService.LogErrorAsync("Faq - UpdateFaq", "Question is required", null, null, null);
                 return BadRequest(new { success = false, error = "La domanda è obbligatoria" });
+            }
 
             faq.CategoryId = dto.CategoryId;
             faq.Question = dto.Question;
@@ -155,6 +176,15 @@ public class FaqController : ControllerBase
     {
         try
         {
+            var faq = await _faqRepository.GetFaqByIdAsync(id);
+            if (faq == null)
+            {
+                await _auditService.LogErrorAsync("Faq - DeleteFaq", $"FAQ not found: {id}", null, null, null);
+                return NotFound(new { success = false, error = "FAQ non trovata" });
+            } else {
+                await _auditService.LogActionAsync("Faq", "Delete Attempt", $"Attempting to delete FAQ {id}", null, null);
+            }
+
             await _faqRepository.DeleteFaqAsync(id);
             await _auditService.LogActionAsync("Faq", "Delete", $"Deleted global FAQ {id}");
             return Ok(new { success = true, message = "FAQ eliminata con successo" });
@@ -174,6 +204,7 @@ public class FaqController : ControllerBase
         {
             var categories = await _faqRepository.GetCategoriesAsync();
             var categoryDtos = categories.Select(c => new { id = c.Id, name = c.Name });
+            await _auditService.LogActionAsync("Faq", "GetCategories", "Retrieved FAQ categories", null, null);
             return Ok(new { success = true, data = categoryDtos });
         }
         catch (Exception ex)

@@ -11,6 +11,7 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Interfaces
         Task UpdateTenantSettingsAsync(Guid tenantId, TenantSettingsDto dto);
         Task<IEnumerable<SettingType>> GetSettingTypesAsync();
         Task<IEnumerable<Setting>> GetSettingsAsync(Guid? tenantId);
+        Task<Setting> GetSettingByIdAsync(int id);
         Task<Setting> CreateSettingAsync(Setting setting);
         Task UpdateSettingAsync(Setting setting);
         Task DeleteSettingAsync(int id);

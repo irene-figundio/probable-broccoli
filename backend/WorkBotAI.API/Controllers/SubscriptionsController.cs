@@ -29,6 +29,11 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscriptions = await _repository.GetSubscriptionsAsync(tenantId, statusId);
+            if (subscriptions == null || !subscriptions.Any())
+            {
+                await _auditService.LogActionAsync("Subscriptions", "Get", $"No subscriptions found for tenantId={tenantId} and statusId={statusId}");
+                return Ok(new { success = true, data = Array.Empty<SubscriptionListDto>() });
+            }
 
             var result = subscriptions.Select(s => new SubscriptionListDto
             {
@@ -61,8 +66,10 @@ public class SubscriptionsController : ControllerBase
         {
             var subscription = await _repository.GetSubscriptionByIdAsync(id);
 
+
             if (subscription == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - Get", $"Subscription {id} not found");
                 return NotFound(new { success = false, error = "NOT_FOUND" });
             }
 
@@ -99,13 +106,22 @@ public class SubscriptionsController : ControllerBase
         try
         {
             // Validazione input base
-            if (dto.TenantId == Guid.Empty) return BadRequest(new { success = false, error = "INVALID_TENANT_ID" });
-            if (dto.PlaneId <= 0) return BadRequest(new { success = false, error = "INVALID_PLANE_ID" });
+            if (dto.TenantId == Guid.Empty) 
+            {
+                await _auditService.LogErrorAsync("Subscriptions - Create", $"Invalid tenant ID {dto.TenantId}");
+                return BadRequest(new { success = false, error = "INVALID_TENANT_ID" });
+            }
+            if (dto.PlaneId <= 0) 
+            { 
+                await _auditService.LogErrorAsync("Subscriptions - Create", $"Invalid plane ID {dto.PlaneId} for tenant {dto.TenantId}");
+                return BadRequest(new { success = false, error = "INVALID_PLANE_ID" }); 
+            }
 
             // Verifica che il piano esista
             var plane = await _repository.GetPlaneByIdAsync(dto.PlaneId);
             if (plane == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - Create", $"Plane {dto.PlaneId} not found for tenant {dto.TenantId}");
                 return BadRequest(new { success = false, error = "PLANE_NOT_FOUND" });
             }
 
@@ -147,6 +163,7 @@ public class SubscriptionsController : ControllerBase
 
             if (subscription == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - Update", $"Subscription {id} not found");
                 return NotFound(new { success = false, error = "NOT_FOUND" });
             }
 
@@ -176,6 +193,7 @@ public class SubscriptionsController : ControllerBase
             var subscription = await _repository.GetSubscriptionByIdAsync(id);
             if (subscription == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - Delete", $"Subscription {id} not found");
                 return NotFound(new { success = false, error = "NOT_FOUND" });
             }
 
@@ -201,12 +219,14 @@ public class SubscriptionsController : ControllerBase
 
             if (subscription == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - ChangeStatus", $"Subscription {id} not found");
                 return NotFound(new { success = false, error = "NOT_FOUND" });
             }
 
             var status = await _repository.GetStatusByIdAsync(statusId);
             if (status == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - ChangeStatus", $"Status {statusId} not found");
                 return BadRequest(new { success = false, error = "INVALID_STATUS_ID" });
             }
 
@@ -232,6 +252,7 @@ public class SubscriptionsController : ControllerBase
 
             if (subscription == null)
             {
+                await _auditService.LogErrorAsync("Subscriptions - Renew", $"Subscription {id} not found");
                 return NotFound(new { success = false, error = "NOT_FOUND" });
             }
 
@@ -266,6 +287,11 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var planes = await _repository.GetPlanesAsync();
+            if (planes == null)
+            {
+                await _auditService.LogActionAsync("Subscriptions", "GetPlanes", "No planes found");
+                return Ok(new { success = true, data = Array.Empty<PlaneDto>() });
+            }
             var result = planes.Select(p => new PlaneDto
             {
                 Id = p.Id,
@@ -290,6 +316,11 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var statuses = await _repository.GetStatusesAsync();
+            if (statuses == null)
+            {
+                await _auditService.LogActionAsync("Subscriptions", "GetStatuses", "No statuses found");
+                return Ok(new { success = true, data = Array.Empty<SubscriptionStatusDto>() });
+            }
             var result = statuses.Select(s => new SubscriptionStatusDto
             {
                 Id = s.Id,
@@ -313,7 +344,11 @@ public class SubscriptionsController : ControllerBase
         try
         {
             var subscriptions = await _repository.GetExpiringSubscriptionsAsync(days);
-
+                        if (subscriptions == null)
+            {
+                await _auditService.LogActionAsync("Subscriptions", "GetExpiring", $"No expiring subscriptions found within {days} days");
+                return Ok(new { success = true, data = Array.Empty<SubscriptionListDto>() });
+            }
             var result = subscriptions.Select(s => new SubscriptionListDto
             {
                 Id = s.Id,

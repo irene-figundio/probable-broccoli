@@ -59,7 +59,12 @@ public class AvailabilityController : ControllerBase
         {
             var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
             if (availability == null)
+            {
+                await _auditService.LogErrorAsync("Availability - GetAvailability", $"Availability not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Disponibilità non trovata" });
+            } else {
+                await _auditService.LogActionAsync("Availability", "Get", $"Retrieved availability {id}", null, availability.TenantId);
+            }
 
             var availabilityDto = new AvailabilityDetailDto
             {
@@ -88,7 +93,12 @@ public class AvailabilityController : ControllerBase
         try
         {
             if (dto.StartTime >= dto.EndTime)
+            {
+                await _auditService.LogErrorAsync("Availability - CreateAvailability", "Invalid time range", null, dto.TenantId);
                 return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
+            }   else {  
+                await _auditService.LogActionAsync("Availability", "Create Attempt", $"Attempting to create availability for staff {dto.StaffId}", null, dto.TenantId);
+            }
 
             var availability = new Availability
             {
@@ -119,10 +129,18 @@ public class AvailabilityController : ControllerBase
         {
             var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
             if (availability == null)
+            {
+                await _auditService.LogErrorAsync("Availability - UpdateAvailability", $"Availability not found: {id}", null, null, null);      
                 return NotFound(new { success = false, error = "Disponibilità non trovata" });
+            } else {
+                await _auditService.LogActionAsync("Availability", "Update Attempt", $"Attempting to update availability {id} for staff {dto.StaffId}", null, availability.TenantId);
+            }
 
             if (dto.StartTime >= dto.EndTime)
+            {
+                await _auditService.LogErrorAsync("Availability - UpdateAvailability", "Invalid time range", null, availability.TenantId);
                 return BadRequest(new { success = false, error = "L'orario di inizio deve essere prima dell'orario di fine" });
+            }               
 
             availability.StaffId = dto.StaffId;
             availability.StartTime = dto.StartTime;
@@ -147,8 +165,15 @@ public class AvailabilityController : ControllerBase
     {
         try
         {
+            var availability = await _availabilityRepository.GetAvailabilityByIdAsync(id);
+            if (availability == null)
+            {
+                await _auditService.LogErrorAsync("Availability - DeleteAvailability", $"Availability not found: {id}", null, null, null);
+                return NotFound(new { success = false, error = "Disponibilità non trovata" });
+            }
+
             await _availabilityRepository.DeleteAvailabilityAsync(id);
-            await _auditService.LogActionAsync("Availability", "Delete", $"Deleted availability {id}");
+            await _auditService.LogActionAsync("Availability", "Delete", $"Deleted availability {id}", null, availability.TenantId);
             return Ok(new { success = true, message = "Disponibilità eliminata" });
         }
         catch (Exception ex)

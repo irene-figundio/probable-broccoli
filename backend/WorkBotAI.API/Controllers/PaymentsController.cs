@@ -33,6 +33,10 @@ public class PaymentsController : ControllerBase
         try
         {
             var payments = await _paymentRepository.GetPaymentsAsync(tenantId, statusId);
+            if (payments == null) {
+                await _auditService.LogActionAsync("Payments", "GetPayments", "No payments found");
+                return Ok(new { success = true, data = Array.Empty<PaymentListDto>() });
+            }
             var dtos = payments.Select(p => new PaymentListDto
             {
                 Id = p.Id,
@@ -62,7 +66,7 @@ public class PaymentsController : ControllerBase
         try
         {
             _logger.LogInformation("Processing {Method} payment for subscription {Id}", dto.PaymentMethod, dto.SubscriptionId);
-
+            await _auditService.LogActionAsync("Payments", "ProcessPayment", $"Initiating payment processing for subscription {dto.SubscriptionId} with method {dto.PaymentMethod}");
             var (isSuccess, transactionId, error) = await _gatewayService.ProcessAsync(dto.Amount, dto.PaymentMethod, dto.Notes);
 
             if (isSuccess)
@@ -87,7 +91,7 @@ public class PaymentsController : ControllerBase
                     TransactionId = transactionId,
                     RedirectUrl = "https://workbotai.com/payment/success"
                 });
-            }
+            } 
 
             await _auditService.LogActionAsync("Payments", "ProcessPayment", $"Payment rejected: {error}", $"SubID: {dto.SubscriptionId}");
             return BadRequest(new PaymentResponseDto
@@ -112,7 +116,12 @@ public class PaymentsController : ControllerBase
     {
         try
         {
-            var types = await _paymentRepository.GetPaymentTypesAsync();
+            var types = await _paymentRepository.GetPaymentTypesAsync();            
+            await _auditService.LogActionAsync("Payments", "GetPaymentTypes", $"Retrieved {types.Count()} payment types");
+            if (types == null || !types.Any()) {
+                await _auditService.LogActionAsync("Payments", "GetPaymentTypes", "No payment types found");
+                return Ok(new { success = true, data = Array.Empty<object>() });
+            }
             return Ok(new { success = true, data = types.Select(t => new { t.Id, t.Name }) });
         }
         catch (Exception ex)
@@ -128,6 +137,11 @@ public class PaymentsController : ControllerBase
         try
         {
             var statuses = await _paymentRepository.GetPaymentStatusesAsync();
+            await _auditService.LogActionAsync("Payments", "GetPaymentStatuses", $"Retrieved {statuses.Count()} payment statuses");
+            if (statuses == null || !statuses.Any()) {
+                await _auditService.LogActionAsync("Payments", "GetPaymentStatuses", "No payment statuses found");
+                return Ok(new { success = true, data = Array.Empty<object>() });
+            }
             return Ok(new { success = true, data = statuses.Select(s => new { s.Id, s.Name }) });
         }
         catch (Exception ex)

@@ -3,6 +3,7 @@ using WorkBotAI.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
+using WorkBotAI.Repositories.DTOs;
 
 namespace WorkBotAI.API.Controllers;
 
@@ -26,10 +27,17 @@ public class AdminController : ControllerBase
         try
         {
             var stats = await _adminRepository.GetAdminStatsAsync();
+            if (stats == null)
+            {
+                await _auditService.LogActionAsync("Admin", "GetStats", "No statistics found");
+                return Ok(new { success = true, data = new AdminStatsDto() });
+            }
+            await _auditService.LogActionAsync("Admin", "GetStats", "Retrieved admin statistics");
             return Ok(new { success = true, data = stats });
         }
         catch (Exception ex)
         {
+            await _auditService.LogErrorAsync("Admin", "GetStats", ex);
             return StatusCode(500, new
             {
                 success = false,
@@ -37,7 +45,30 @@ public class AdminController : ControllerBase
             });
         }
     }
-
+    [HttpGet("stats/{id}")]
+    public async Task<ActionResult> GetStatsById(Guid id)
+    {
+        try
+        {
+            var stats = await _adminRepository.GetAdminStatsByIdAsync(id);
+            if (stats == null)
+            {
+                await _auditService.LogActionAsync("Admin", "GetStatsById", "No statistics found");
+                return Ok(new { success = true, data = new AdminTenantStatsDto() });
+            }
+            await _auditService.LogActionAsync("Admin", "GetStatsById", "Retrieved admin statistics");
+            return Ok(new { success = true, data = stats });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogErrorAsync("Admin", "GetStatsById", ex);
+            return StatusCode(500, new
+            {
+                success = false,
+                error = $"Errore nel recupero delle statistiche: {ex.Message}"
+            });
+        }
+    }
     [HttpGet("search")]
     public async Task<ActionResult> GlobalSearch([FromQuery] string q, [FromQuery] int limit = 10)
     {
@@ -45,10 +76,16 @@ public class AdminController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(q))
             {
+                await _auditService.LogErrorAsync("Admin - GlobalSearch", "Query parameter 'q' is required", null, null, null);
                 return BadRequest(new { success = false, error = "Query parameter 'q' is required" });
             }
 
             var results = await _adminRepository.GlobalSearchAsync(q, limit);
+            if (results == null || results.TotalResults == 0)
+            {
+                await _auditService.LogActionAsync("Admin", "GlobalSearch", $"No results found for query: {q}");
+                return Ok(new { success = true, data = results });
+            }
             await _auditService.LogActionAsync("Admin", "GlobalSearch", $"Search query: {q}");
             return Ok(new { success = true, data = results });
         }

@@ -80,6 +80,10 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
             return await query.ToListAsync();
         }
 
+        public async Task<Setting> GetSettingByIdAsync(int id)
+        {
+            return await _context.Settings.Include(s => s.SettingType).Include(s => s.Tenant).FirstOrDefaultAsync(s => s.Id == id);
+        }
         public async Task<Setting> CreateSettingAsync(Setting setting)
         {
             _context.Settings.Add(setting);

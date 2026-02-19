@@ -27,10 +27,10 @@ public class TenantDetailDto
     public bool IsActive { get; set; }
     public DateTime? CreationDate { get; set; }
     public SubscriptionInfoDto? Subscription { get; set; }
-    public int TotalUsers { get; set; }
-    public int TotalAppointments { get; set; }
-    public int TotalCustomers { get; set; }
-    public int TotalServices { get; set; }
+    //public int TotalUsers { get; set; }
+   // public int TotalAppointments { get; set; }
+    //public int TotalCustomers { get; set; }
+    //public int TotalServices { get; set; }
 }
 
 // DTO per info abbonamento

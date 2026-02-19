@@ -28,6 +28,11 @@ public class TenantsController : ControllerBase
         try
         {
             var tenants = await _tenantRepository.GetTenantsAsync();
+            if (tenants == null || !tenants.Any())
+            {
+                await _auditService.LogActionAsync("Tenants", "GetTenants", "No tenants found");
+                return Ok(new { success = true, data = Array.Empty<TenantListDto>() });
+            }
             var dtos = tenants.Select(t => new TenantListDto
             {
                 Id = t.Id,
@@ -58,6 +63,7 @@ public class TenantsController : ControllerBase
 
             if (tenant == null)
             {
+                await _auditService.LogErrorAsync("Tenants - GetTenant", $"Tenant {id} not found");
                 return NotFound(new { success = false, error = "Tenant non trovato" });
             }
 
@@ -125,6 +131,7 @@ public class TenantsController : ControllerBase
 
             if (tenant == null)
             {
+                await _auditService.LogErrorAsync("Tenants - UpdateTenant", $"Tenant {id} not found");
                 return NotFound(new { success = false, error = "Tenant non trovato" });
             }
 
@@ -154,6 +161,7 @@ public class TenantsController : ControllerBase
             var tenant = await _tenantRepository.GetTenantByIdAsync(id);
             if (tenant == null)
             {
+                await _auditService.LogErrorAsync("Tenants - DeleteTenant", $"Tenant {id} not found");
                 return NotFound(new { success = false, error = "Tenant non trovato" });
             }
 
@@ -176,6 +184,11 @@ public class TenantsController : ControllerBase
         try
         {
             var categories = await _tenantRepository.GetCategoriesAsync();
+            if (categories == null || !categories.Any())
+            {
+                await _auditService.LogActionAsync("Tenants", "GetCategories", "No categories found");
+                return Ok(new { success = true, data = Array.Empty<object>() });
+            }
             return Ok(new { success = true, data = categories.Select(c => new { c.Id, c.Name }) });
         }
         catch (Exception ex)

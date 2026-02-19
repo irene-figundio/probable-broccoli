@@ -29,6 +29,11 @@ public class AnalyticsController : ControllerBase
         try
         {
             var analytics = await _analyticsRepository.GetTenantAnalyticsAsync(tenantId, period);
+            if (analytics == null)
+            {
+                await _auditService.LogActionAsync("Analytics", "GetTenantAnalytics", $"No analytics data found for tenant {tenantId} and period {period}", null, tenantId);
+                return Ok(new { success = true, data = new { } });
+            }
             return Ok(new { success = true, data = analytics });
         }
         catch (Exception ex)
@@ -45,6 +50,11 @@ public class AnalyticsController : ControllerBase
         try
         {
             var comparison = await _analyticsRepository.ComparePeriodsAsync(tenantId);
+            if (comparison == null)
+            {
+                await _auditService.LogActionAsync("Analytics", "ComparePeriods", $"No comparison data found for tenant {tenantId}", null, tenantId);
+                return NotFound(new { success = false, error = "DATA_NOT_FOUND" });
+            }
             return Ok(new { success = true, data = comparison });
         }
         catch (Exception ex)

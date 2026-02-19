@@ -33,12 +33,28 @@ public class TenantDashboardController : ControllerBase
             var tenant = await _tenantRepository.GetTenantByIdAsync(tenantId);
             if (tenant == null)
             {
+                await _auditService.LogErrorAsync("Dashboard", $"Tenant {tenantId} not found", null, tenantId);
                 return NotFound(new { success = false, error = "Tenant non trovato" });
             }
 
             var stats = await _dashboardRepository.GetStatsAsync(tenantId);
+            if (stats == null)
+            {
+                await _auditService.LogActionAsync("Dashboard", "GetStats", $"Stats not found for tenant {tenantId}", null, tenantId);
+                return Ok(new { success = true, data = new TenantDashboardDto { TenantId = tenantId, TenantName = tenant.Name, Stats = null, UpcomingAppointments = new List<WorkBotAI.API.DTOs.AppointmentListDto>(), RecentAppointments = new List<WorkBotAI.API.DTOs.AppointmentListDto>() } });
+            }
             var upcoming = await _dashboardRepository.GetUpcomingAppointmentsAsync(tenantId, 5);
+            if (upcoming == null)
+                {
+                await _auditService.LogActionAsync("Dashboard", "GetUpcomingAppointments", $"Upcoming appointments not found for tenant {tenantId}", null, tenantId);
+                return Ok(new { success = true, data = new List<WorkBotAI.API.DTOs.AppointmentListDto>() });
+            }
             var recent = await _dashboardRepository.GetRecentAppointmentsAsync(tenantId, 5);
+            if (recent == null)
+            {
+                await _auditService.LogActionAsync("Dashboard", "GetRecentAppointments", $"Recent appointments not found for tenant {tenantId}", null, tenantId);
+                return Ok(new { success = true, data = new List<WorkBotAI.API.DTOs.AppointmentListDto>() });
+            }
 
             var result = new TenantDashboardDto
             {

@@ -30,7 +30,18 @@ public class AppointmentsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
+        if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
+        {
+            await _auditService.LogErrorAsync("Appointments - GetAppointments", "Invalid date range", null, null, null);
+            return BadRequest(new { success = false, error = "Invalid date range" });
+        }
+
         var appointments = await _appointmentRepository.GetAppointmentsAsync(tenantId, statusId, fromDate, toDate);
+        if (appointments == null || !appointments.Any())
+        {
+            await _auditService.LogActionAsync("Appointments", "GetAppointments", "No appointments found", null, tenantId);
+            return Ok(new { success = true, data = new List<AppointmentListDto>() });
+        }
 
         var appointmentDtos = appointments.Select(a => new AppointmentListDto
         {
@@ -63,6 +74,7 @@ public class AppointmentsController : ControllerBase
 
         if (appointment == null)
         {
+            await _auditService.LogErrorAsync("Appointments - GetAppointment", $"Appointment not found: {id}", null, null, null);
             return NotFound(new { success = false, error = "Appuntamento non trovato" });
         }
 
@@ -154,6 +166,7 @@ public class AppointmentsController : ControllerBase
 
         if (appointment == null)
         {
+            await _auditService.LogErrorAsync("Appointments - UpdateAppointment", $"Appointment not found: {id}", null, null, null);
             return NotFound(new { success = false, error = "Appuntamento non trovato" });
         }
 
@@ -177,6 +190,13 @@ public class AppointmentsController : ControllerBase
     {
         try
         {
+            var appointment = await _appointmentRepository.GetAppointmentByIdAsync(id);
+            if (appointment == null)
+            {
+                await _auditService.LogErrorAsync("Appointments - DeleteAppointment", $"Appointment not found: {id}", null, null, null);
+                return NotFound(new { success = false, error = "Appuntamento non trovato" });
+            }
+
             await _appointmentRepository.DeleteAppointmentAsync(id);
             await _auditService.LogActionAsync("Appointments", "Delete", $"Deleted appointment {id}");
             return Ok(new { success = true, message = "Appuntamento eliminato con successo" });
@@ -194,6 +214,13 @@ public class AppointmentsController : ControllerBase
     {
         try
         {
+            var appointment = await _appointmentRepository.GetAppointmentByIdAsync(id);
+            if (appointment == null)
+            {
+                await _auditService.LogErrorAsync("Appointments - ChangeStatus", $"Appointment not found: {id}", null, null, null);
+                return NotFound(new { success = false, error = "Appuntamento non trovato" });
+            }
+
             await _appointmentRepository.ChangeAppointmentStatusAsync(id, statusId);
             await _auditService.LogActionAsync("Appointments", "ChangeStatus", $"Changed appointment {id} status to {statusId}");
             return Ok(new { success = true, message = "Stato cambiato con successo" });
@@ -210,6 +237,11 @@ public class AppointmentsController : ControllerBase
     public async Task<ActionResult> GetStatuses()
     {
         var statuses = await _appointmentRepository.GetAppointmentStatusesAsync();
+        if (statuses == null || !statuses.Any())
+        {
+            await _auditService.LogActionAsync("Appointments", "GetStatuses", "No appointment statuses found");
+            return Ok(new { success = true, data = new List<AppointmentStatusDto>() });
+        }
         var statusDtos = statuses.Select(s => new AppointmentStatusDto
         {
             Id = s.Id,
@@ -223,7 +255,13 @@ public class AppointmentsController : ControllerBase
     [HttpGet("today")]
     public async Task<ActionResult> GetTodayAppointments([FromQuery] Guid? tenantId = null)
     {
+
         var appointments = await _appointmentRepository.GetTodayAppointmentsAsync(tenantId);
+        if (appointments == null || appointments.Count() == 0)
+        {
+            await _auditService.LogActionAsync("Appointments", "GetTodayAppointments", "No appointments found for today", null, tenantId);
+            return Ok(new { success = true, data = new List<AppointmentListDto>() });
+        }
         var appointmentDtos = appointments.Select(a => new AppointmentListDto
         {
             Id = a.Id,
@@ -252,6 +290,11 @@ public class AppointmentsController : ControllerBase
     public async Task<ActionResult> GetWeekAppointments([FromQuery] Guid? tenantId = null)
     {
         var appointments = await _appointmentRepository.GetWeekAppointmentsAsync(tenantId);
+        if (appointments == null || appointments.Count() == 0)
+        {
+            await _auditService.LogActionAsync("Appointments", "GetWeekAppointments", "No appointments found for this week", null, tenantId);
+            return Ok(new { success = true, data = new List<AppointmentListDto>() });
+        }
         var appointmentDtos = appointments.Select(a => new AppointmentListDto
         {
             Id = a.Id,

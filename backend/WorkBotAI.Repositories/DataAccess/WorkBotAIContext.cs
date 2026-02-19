@@ -86,7 +86,8 @@ public partial class WorkBotAIContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Hellboy\\SQLEXPRESS;Database=WorkBotAI;User Id=sa;Password=sa1;TrustServerCertificate=True");
+        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS01;Database=WorkBotAI_N;User ID=sa;Password=ed+4pv7ah3nJC+86;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;");
+        //=> optionsBuilder.UseSqlServer("Server=Hellboy\\SQLEXPRESS;Database=WorkBotAI_N;User Id=sa;Password=sa1;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -300,7 +301,16 @@ public partial class WorkBotAIContext : DbContext
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.Name).HasMaxLength(150);
+            entity.Property(e => e.Gender)
+                                    .IsRequired()
+                                    .HasColumnType("nvarchar(1)")
+                                    .HasMaxLength(1)
+                                    .HasDefaultValue("U");
 
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_JobTypes_Gender", "[Gender] IN ('F','M','U')");
+            });
             entity.HasOne(d => d.Category).WithMany(p => p.JobTypes)
                 .HasForeignKey(d => d.CategoryId)
                 .HasConstraintName("FK_JobTypes_Categories");

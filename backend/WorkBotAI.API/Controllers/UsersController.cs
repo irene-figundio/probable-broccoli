@@ -28,6 +28,11 @@ public class UsersController : ControllerBase
         try
         {
             var users = await _userRepository.GetUsersAsync(tenantId);
+            if (users == null || !users.Any())
+            {
+                await _auditService.LogErrorAsync("Users - GetUsers", $"No users found for tenant: {tenantId}", null, tenantId);
+                return NotFound(new { success = false, error = "Nessun utente trovato" });
+            }
             var userDtos = users.Select(u => new UserListDto
             {
                 Id = u.Id,
@@ -65,6 +70,7 @@ public class UsersController : ControllerBase
 
             if (user == null)
             {
+                await _auditService.LogErrorAsync("Users - GetUser(Id)", $"User not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Utente non trovato" });
             }
 
@@ -108,6 +114,7 @@ public class UsersController : ControllerBase
             var existingUser = await _userRepository.GetUserByUsernameAsync(dto.UserName);
             if (existingUser != null)
             {
+                await _auditService.LogErrorAsync("Users - CreateUser", $"Username already exists: {dto.UserName}", null, null, null);
                 return Conflict(new { success = false, error = "Username già esistente" });
             }
 
@@ -115,12 +122,14 @@ public class UsersController : ControllerBase
             var existingEmail = await _userRepository.GetUserByEmailAsync(dto.Mail);
             if (existingEmail != null)
             {
+                await _auditService.LogErrorAsync("Users - CreateUser", $"Email already exists: {dto.Mail}", null, null, null);
                 return Conflict(new { success = false, error = "Email già esistente" });
             }
 
             var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.Password);
             if (!isPasswordValid)
             {
+                await _auditService.LogErrorAsync("Users - CreateUser", $"Invalid password for user: {dto.UserName}", null, null, null);
                 return BadRequest(new { success = false, error = passwordError });
             }
 
@@ -165,6 +174,7 @@ public class UsersController : ControllerBase
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null)
             {
+                await _auditService.LogErrorAsync("Users - UpdateUser", $"User not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Utente non trovato" });
             }
 
@@ -172,6 +182,7 @@ public class UsersController : ControllerBase
             var existingUser = await _userRepository.GetUserByUsernameAsync(dto.UserName);
             if (existingUser != null && existingUser.Id != id)
             {
+                await _auditService.LogErrorAsync("Users - UpdateUser", $"Username already exists: {dto.UserName}", null, null, null);
                 return Conflict(new { success = false, error = "Username già esistente" });
             }
 
@@ -179,6 +190,7 @@ public class UsersController : ControllerBase
             var existingEmail = await _userRepository.GetUserByEmailAsync(dto.Mail);
             if (existingEmail != null && existingEmail.Id != id)
             {
+                await _auditService.LogErrorAsync("Users - UpdateUser", $"Email already exists: {dto.Mail}", null, null, null);
                 return Conflict(new { success = false, error = "Email già esistente" });
             }
 
@@ -213,11 +225,13 @@ public class UsersController : ControllerBase
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null)
             {
+                await _auditService.LogErrorAsync("Users - DeleteUser", $"User not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Utente non trovato" });
             }
 
             if (user.IsSuperAdmin == true)
             {
+                await _auditService.LogErrorAsync("Users - DeleteUser", $"Attempted to delete SuperAdmin: {id}", null, null, null);
                 return BadRequest(new { success = false, error = "Non è possibile eliminare un SuperAdmin" });
             }
 
@@ -242,6 +256,7 @@ public class UsersController : ControllerBase
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null)
             {
+                await _auditService.LogErrorAsync("Users - ToggleUserStatus", $"User not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Utente non trovato" });
             }
 
@@ -273,12 +288,14 @@ public class UsersController : ControllerBase
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null)
             {
+                await _auditService.LogErrorAsync("Users - ChangePassword", $"User not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Utente non trovato" });
             }
 
             var (isPasswordValid, passwordError) = PasswordValidator.Validate(dto.NewPassword);
             if (!isPasswordValid)
             {
+                await _auditService.LogErrorAsync("Users - ChangePassword", $"Invalid password for user: {user.UserName}", null, user.TenantId, user.Id);
                 return BadRequest(new { success = false, error = passwordError });
             }
 

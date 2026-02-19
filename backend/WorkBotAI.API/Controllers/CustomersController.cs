@@ -28,6 +28,12 @@ public class CustomersController : ControllerBase
         try
         {
             var customers = await _customerRepository.GetCustomersAsync(tenantId, search);
+                if (customers == null) {
+                    await _auditService.LogActionAsync("Customers", "GetCustomers", "No customers found", null, tenantId);
+                    return Ok(new { success = true, data = Array.Empty<CustomerListDto>(), count = 0 });
+                } else {
+                    await _auditService.LogActionAsync("Customers", "GetCustomers", $"Retrieved {customers.Count()} customers", null, tenantId);
+                }
             return Ok(new { success = true, data = customers, count = customers.Count() });
         }
         catch (Exception ex)
@@ -45,7 +51,12 @@ public class CustomersController : ControllerBase
         {
             var customer = await _customerRepository.GetCustomerByIdAsync(id);
             if (customer == null)
+            {
+                await _auditService.LogErrorAsync("Customers - GetCustomer", $"Customer not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Cliente non trovato" });
+            } else {
+                await _auditService.LogActionAsync("Customers", "Get", $"Retrieved customer {id}", null, customer.TenantId);
+            }
 
             var recentAppointments = await _customerRepository.GetRecentAppointmentsAsync(id);
             var dto = new CustomerDetailDto
@@ -128,7 +139,12 @@ public class CustomersController : ControllerBase
         {
             var customer = await _customerRepository.GetCustomerByIdAsync(id);
             if (customer == null)
+            {
+                await _auditService.LogErrorAsync("Customers - UpdateCustomer", $"Customer not found: {id}", null, null, null);
                 return NotFound(new { success = false, error = "Cliente non trovato" });
+            } else {
+                await _auditService.LogActionAsync("Customers", "Update Attempt", $"Attempting to update customer {id}", null, customer.TenantId);
+            }
 
             customer.FullName = dto.FullName;
             customer.Phone = dto.Phone;
@@ -153,8 +169,17 @@ public class CustomersController : ControllerBase
     {
         try
         {
+            var customer = await _customerRepository.GetCustomerByIdAsync(id);
+            if (customer == null)
+            {
+                await _auditService.LogErrorAsync("Customers - DeleteCustomer", $"Customer not found: {id}", null, null, null);
+                return NotFound(new { success = false, error = "Cliente non trovato" });
+            } else {
+                await _auditService.LogActionAsync("Customers", "Delete Attempt", $"Attempting to delete customer {id}", null, customer.TenantId);
+            }
+
             await _customerRepository.DeleteCustomerAsync(id);
-            await _auditService.LogActionAsync("Customers", "Delete", $"Deleted customer {id}");
+            await _auditService.LogActionAsync("Customers", "Delete", $"Deleted customer {id}", null, customer.TenantId);
             return Ok(new { success = true, message = "Cliente eliminato" });
         }
         catch (Exception ex)
@@ -170,8 +195,10 @@ public class CustomersController : ControllerBase
     {
         try
         {
+
             var totalCustomers = await _customerRepository.GetTotalCustomersAsync(tenantId);
             var newThisMonth = await _customerRepository.GetNewCustomersThisMonthAsync(tenantId);
+            await _auditService.LogActionAsync("Customers", "GetTenantCustomerStats", $"Retrieved customer stats for tenant {tenantId}", null, tenantId);
             return Ok(new
             {
                 success = true,

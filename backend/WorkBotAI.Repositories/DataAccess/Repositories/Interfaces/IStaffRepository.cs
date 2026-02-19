@@ -13,6 +13,8 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Interfaces
         Task UpdateStaffAsync(Staff staff);
         Task DeleteStaffAsync(int id);
         Task ToggleStaffStatusAsync(int id);
+        Task<IEnumerable<StaffListDto>> GetStaffAsync(Guid? tenantId, string? search, int? jobTypeId, string? jobTypeGender);
+
         Task<int> GetTotalStaffAsync(Guid tenantId);
         Task<int> GetActiveStaffAsync(Guid tenantId);
         Task<IEnumerable<JobType>> GetJobTypesAsync();

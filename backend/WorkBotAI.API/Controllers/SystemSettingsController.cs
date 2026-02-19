@@ -27,6 +27,11 @@ public class SystemSettingsController : ControllerBase
         try
         {
             var settings = await _repository.GetAllSettingsAsync();
+            if (settings == null || !settings.Any())
+            {
+                await _auditService.LogActionAsync("SystemSettings", "GetAll", "No system settings found");
+                return Ok(new { success = true, data = new Dictionary<string, Dictionary<string, string?>>() });
+            }
 
             // Raggruppa per categoria
             var grouped = settings
@@ -52,6 +57,11 @@ public class SystemSettingsController : ControllerBase
         try
         {
             var settings = await _repository.GetByCategoryAsync(category);
+            if (settings == null || !settings.Any())
+            {
+                await _auditService.LogActionAsync("SystemSettings", "GetByCategory", $"No settings found for category {category}");
+                return NotFound(new { success = false, error = "Categoria non trovata" });
+            }
             var result = settings.ToDictionary(s => s.Key, s => s.Value);
 
             return Ok(new { success = true, data = result });
@@ -72,7 +82,12 @@ public class SystemSettingsController : ControllerBase
             var setting = await _repository.GetSettingAsync(category, key);
 
             if (setting == null)
+            {
+                await _auditService.LogActionAsync("SystemSettings", "GetSetting", $"No setting found for {category}/{key}");
                 return NotFound(new { success = false, error = "Impostazione non trovata" });
+            } else {    
+                await _auditService.LogActionAsync("SystemSettings", "GetSetting", $"Retrieved setting {category}/{key}");
+            }
 
             return Ok(new { success = true, data = setting.Value });
         }
@@ -117,25 +132,25 @@ public class SystemSettingsController : ControllerBase
         }
     }
 
-    // POST: api/SystemSettings/seed
-    [HttpPost("seed")]
-    public async Task<ActionResult> SeedSettings()
-    {
-        try
-        {
-            var settings = await _repository.GetAllSettingsAsync();
-            if (settings.Any())
-            {
-                return BadRequest(new { success = false, error = "Impostazioni già presenti" });
-            }
+    //// POST: api/SystemSettings/seed
+    //[HttpPost("seed")]
+    //public async Task<ActionResult> SeedSettings()
+    //{
+    //    try
+    //    {
+    //        var settings = await _repository.GetAllSettingsAsync();
+    //        if (settings.Any())
+    //        {
+    //            return BadRequest(new { success = false, error = "Impostazioni già presenti" });
+    //        }
 
-            await _repository.SeedDefaultSettingsAsync();
-            return Ok(new { success = true, message = "Impostazioni di default create" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Errore nel seeding delle impostazioni");
-            return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
-        }
-    }
+    //        await _repository.SeedDefaultSettingsAsync();
+    //        return Ok(new { success = true, message = "Impostazioni di default create" });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Errore nel seeding delle impostazioni");
+    //        return StatusCode(500, new { success = false, error = "INTERNAL_SERVER_ERROR" });
+    //    }
+    //}
 }

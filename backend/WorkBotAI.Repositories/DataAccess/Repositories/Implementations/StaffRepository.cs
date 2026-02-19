@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -85,6 +85,52 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
                 staff.LastModificationTime = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
+        }
+
+
+        public async Task<IEnumerable<StaffListDto>> GetStaffAsync(
+        Guid? tenantId,
+        string? search,
+        int? jobTypeId,
+        string? jobTypeGender)
+        {
+            var q = _context.Staff
+                .Where(s => s.IsDeleted != true)
+                .Include(s => s.Tenant)
+                .Include(s => s.JobType)
+                .AsQueryable();
+
+            if (tenantId.HasValue) q = q.Where(s => s.TenantId == tenantId.Value);
+            if (jobTypeId.HasValue) q = q.Where(s => s.JobTypeId == jobTypeId.Value);
+            if (!string.IsNullOrWhiteSpace(search)) q = q.Where(s => s.Name.Contains(search));
+
+            if (!string.IsNullOrWhiteSpace(jobTypeGender))
+            {
+                jobTypeGender = jobTypeGender.Trim().ToUpperInvariant();
+                if (jobTypeGender is not ("F" or "M" or "U"))
+                    throw new ArgumentException("jobTypeGender must be 'F', 'M', or 'U'.");
+
+                q = q.Where(s => s.JobType != null && s.JobType.Gender == jobTypeGender);
+            }
+
+            return await q
+                .OrderBy(s => s.Name)
+                .Select(s => new StaffListDto
+                {
+                    Id = s.Id,
+                    TenantId = s.TenantId,
+                    TenantName = s.Tenant != null ? s.Tenant.Name : null,
+                    Name = s.Name,
+                    JobTypeId = s.JobTypeId,
+                    JobTypeName = s.JobType != null ? s.JobType.Name : null,
+
+                    JobTypeGender = s.JobType != null ? s.JobType.Gender : null, // ✅ nuovo
+
+                    IsActive = s.IsActive ?? true,
+                    CreationTime = s.CreationTime,
+                    AppointmentsCount = s.Appointments.Count(a => a.IsDeleted != true)
+                })
+                .ToListAsync();
         }
 
         public async Task<int> GetTotalStaffAsync(Guid tenantId)

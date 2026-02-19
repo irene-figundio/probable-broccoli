@@ -12,16 +12,17 @@ namespace WorkBotAI.API.Services
     {
         public string HashPassword(string password)
         {
-            return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         public bool VerifyPassword(string password, string hashedPassword)
         {
             if (string.IsNullOrEmpty(hashedPassword)) return false;
+            Console.WriteLine($"HASH:[{hashedPassword}] LEN:{hashedPassword?.Length}");
 
             try
             {
-                return BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword);
+                return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
             }
             catch (Exception)
             {

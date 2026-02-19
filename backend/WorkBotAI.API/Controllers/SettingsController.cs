@@ -29,7 +29,10 @@ public class SettingsController : ControllerBase
         {
             var tenantSettings = await _settingRepository.GetTenantSettingsAsync(tenantId);
             if (tenantSettings == null)
+            {
+                await _auditService.LogErrorAsync("Services - Delete", $"Tenant {tenantId} not found", null, tenantId);
                 return NotFound(new { success = false, error = "Tenant non trovato" });
+            }               
 
             return Ok(new { success = true, data = tenantSettings });
         }
@@ -64,6 +67,11 @@ public class SettingsController : ControllerBase
         try
         {
             var types = await _settingRepository.GetSettingTypesAsync();
+            if (types == null || !types.Any())
+            {
+                await _auditService.LogErrorAsync("Settings", "No setting types found", null);
+                return NotFound(new { success = false, error = "Nessun tipo di impostazione trovato" });
+            }
             var typeDtos = types.Select(t => new SettingTypeDto { Id = t.Id, Name = t.Name });
             return Ok(new { success = true, data = typeDtos });
         }
@@ -81,6 +89,11 @@ public class SettingsController : ControllerBase
         try
         {
             var settings = await _settingRepository.GetSettingsAsync(tenantId);
+            if (settings == null || !settings.Any())
+            {
+                await _auditService.LogErrorAsync("Settings", $"No settings found for tenant {tenantId}", null, tenantId);
+                return NotFound(new { success = false, error = "Nessuna impostazione trovata" });
+            }
             var settingDtos = settings.Select(s => new SettingListDto
             {
                 Id = s.Id,
@@ -104,6 +117,11 @@ public class SettingsController : ControllerBase
     {
         try
         {
+            if (dto == null || dto.TenantId == Guid.Empty || dto.SettingTypeId <= 0)
+            {
+                await _auditService.LogErrorAsync("Settings", "Invalid setting data provided", null, dto?.TenantId);
+                return BadRequest(new { success = false, error = "Dati dell'impostazione non validi" });
+            }
             var setting = new Setting
             {
                 TenantId = dto.TenantId,
@@ -145,6 +163,12 @@ public class SettingsController : ControllerBase
     {
         try
         {
+            var setting = await _settingRepository.GetSettingByIdAsync(id);
+            if (setting == null)
+            {
+                await _auditService.LogErrorAsync("Settings", $"Setting {id} not found", null);
+                return NotFound(new { success = false, error = "Impostazione non trovata" });
+            }
             await _settingRepository.DeleteSettingAsync(id);
             await _auditService.LogActionAsync("Settings", "Delete", $"Deleted setting {id}");
             return Ok(new { success = true, message = "Impostazione eliminata" });

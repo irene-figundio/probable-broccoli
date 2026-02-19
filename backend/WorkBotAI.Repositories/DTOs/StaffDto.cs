@@ -9,9 +9,11 @@ public class StaffListDto
     public string Name { get; set; } = string.Empty;
     public int? JobTypeId { get; set; }
     public string? JobTypeName { get; set; }
+    public string? JobTypeGender { get; set; }
     public bool IsActive { get; set; }
     public DateTime? CreationTime { get; set; }
     public int AppointmentsCount { get; set; }
+
 }
 
 // Dettaglio staff

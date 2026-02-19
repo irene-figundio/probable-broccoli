@@ -87,6 +87,36 @@ namespace WorkBotAI.Repositories.DataAccess.Repositories.Implementations
             };
         }
 
+        public async Task<AdminTenantStatsDto> GetAdminStatsByIdAsync(Guid id)
+        {
+            // === TENANTS ===
+            var tenant = await _context.Tenants.FindAsync(id);
+            // === USERS ===
+            var tenantUsers = await _context.Users.Where(u => u.TenantId == id).ToListAsync();
+            var totalUsers = tenantUsers.Count;
+            var activeUsers = tenantUsers.Count(u => u.IsActive == true);
+            // === APPOINTMENTS ===
+            var tenantAppointments = await _context.Appointments.Where(a => a.TenantId == id).ToListAsync();
+            var completedAppointments = tenantAppointments.Count(a => a.Status != null && a.Status.Name == "completed");
+            var cancelledAppointments = tenantAppointments.Count(a => a.Status != null && a.Status.Name == "cancelled");
+            var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var appointmentsThisMonth = tenantAppointments.Count(a => a.StartTime >= startOfMonth);
+            var startOfWeek = DateTime.UtcNow.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+            var appointmentsThisWeek = tenantAppointments.Count(a => a.StartTime >= startOfWeek);
+
+            var adminStats = new AdminTenantStatsDto
+            {
+                TotalUsers = totalUsers,
+                ActiveUsers = activeUsers,
+                TotalAppointments = tenantAppointments.Count,
+                ThisWeek = appointmentsThisWeek,
+                ThisMonth = appointmentsThisMonth,
+                Completed = completedAppointments,
+                Cancelled = cancelledAppointments
+            };
+
+            return adminStats;
+        }
         public async Task<GlobalSearchResultDto> GlobalSearchAsync(string query, int limit)
         {
             var result = new GlobalSearchResultDto();

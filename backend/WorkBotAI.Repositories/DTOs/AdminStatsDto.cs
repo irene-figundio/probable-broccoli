@@ -1,3 +1,5 @@
+using WorkbotAI.Models;
+
 namespace WorkBotAI.Repositories.DTOs
 {
     public class AdminStatsDto
@@ -8,6 +10,19 @@ namespace WorkBotAI.Repositories.DTOs
         public SubscriptionStats Subscriptions { get; set; }
         public AppointmentStats Appointments { get; set; }
         public GrowthStats Growth { get; set; }
+    }
+
+
+    public class AdminTenantStatsDto
+    {
+        //public TenantDetailDto Tenant { get; set; }
+        public int TotalUsers { get; set; }
+        public int ActiveUsers { get; set; }
+        public int TotalAppointments { get; set; }
+        public int ThisWeek { get; set; }
+        public int ThisMonth { get; set; }
+        public int Completed { get; set; }
+        public int Cancelled { get; set; }
     }
 
     public class TenantStats

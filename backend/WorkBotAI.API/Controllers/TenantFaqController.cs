@@ -27,6 +27,11 @@ public class TenantFaqController : ControllerBase
         try
         {
             var faqs = await _repository.GetTenantFaqsAsync(tenantId);
+            if (faqs == null || !faqs.Any())
+                {
+                await _auditService.LogActionAsync("TenantFaq", "Get", "No FAQs found for tenant", null, tenantId);
+                return Ok(new { success = true, data = new List<TenantFaqDto>() });
+            }
             var dtos = faqs.Select(tf => new TenantFaqDto
             {
                 Id = tf.Id,
@@ -82,6 +87,7 @@ public class TenantFaqController : ControllerBase
             var tenantFaq = await _repository.GetByIdAsync(id);
             if (tenantFaq == null)
             {
+                await _auditService.LogErrorAsync("TenantFaq - Update", $"FAQ with id {id} not found for update", null, null);
                 return NotFound(new { success = false, error = "FAQ non trovata" });
             }
 
@@ -109,6 +115,7 @@ public class TenantFaqController : ControllerBase
             var tenantFaq = await _repository.GetByIdAsync(id);
             if (tenantFaq == null)
             {
+                await _auditService.LogErrorAsync("TenantFaq - Delete", $"FAQ with id {id} not found for deletion", null, null);
                 return NotFound(new { success = false, error = "FAQ non trovata" });
             }
 
@@ -130,6 +137,11 @@ public class TenantFaqController : ControllerBase
         try
         {
             var faqs = await _repository.GetGlobalFaqsAsync();
+            if (faqs == null)
+            {
+                await _auditService.LogActionAsync("TenantFaq", "GetGlobal", "No global FAQs found");
+                return Ok(new { success = true, data = new List<object>() });
+            }
             return Ok(new { success = true, data = faqs.Select(f => new { f.Id, f.Question, Category = f.Category?.Name }) });
         }
         catch (Exception ex)
