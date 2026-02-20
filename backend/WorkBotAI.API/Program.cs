@@ -86,15 +86,6 @@ builder.Services.AddHttpContextAccessor();
 // Registra Services
 builder.Services.AddScoped<LogActionFilter>();
 
-// Configurazione Persistence Layer con Typed HttpClients
-builder.Services.AddHttpClient<ICategoryPersistence, CategoryPersistence>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001/");
-});
-builder.Services.AddHttpClient<IJobTypePersistence, JobTypePersistence>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001/");
-});
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IAuditService, AuditService>();

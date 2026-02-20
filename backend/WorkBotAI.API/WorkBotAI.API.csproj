@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\WorkbotAI.Models\WorkbotAI.Models.csproj" />
     <ProjectReference Include="..\WorkBotAI.Repositories\WorkBotAI.Repositories.csproj" />
+    <ProjectReference Include="..\WorkBotAI.Persistence\WorkBotAI.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
