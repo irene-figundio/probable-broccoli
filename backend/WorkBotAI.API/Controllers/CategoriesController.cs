@@ -73,8 +73,6 @@ namespace WorkBotAI.API.Controllers
 
             return Ok(new { success = true, message = "Category updated" });
         }
-            return NotFound(new { success = false, error = "Category not found or update error" });
-        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
@@ -89,8 +87,6 @@ namespace WorkBotAI.API.Controllers
             await _auditService.LogActionAsync("Categories", "Delete", $"Deleted category {category.Name}", null, null, userId);
 
             return Ok(new { success = true, message = "Category deleted" });
-        }
-            return NotFound(new { success = false, error = "Category not found or delete error" });
         }
     }
 }

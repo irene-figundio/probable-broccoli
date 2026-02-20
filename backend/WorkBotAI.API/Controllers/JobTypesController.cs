@@ -57,8 +57,6 @@ namespace WorkBotAI.API.Controllers
 
             return CreatedAtAction(nameof(GetJobType), new { id = created.Id }, new { success = true, data = created });
         }
-            return StatusCode(500, new { success = false, error = "Error creating JobType" });
-        }
 
         [HttpPost("bulk")]
         public async Task<ActionResult> BulkCreateJobType(BulkCreateJobTypeDto dto)
@@ -113,8 +111,6 @@ namespace WorkBotAI.API.Controllers
 
             return Ok(new { success = true, message = "JobType updated" });
         }
-            return NotFound(new { success = false, error = "JobType not found or update error" });
-        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteJobType(int id)
@@ -129,8 +125,6 @@ namespace WorkBotAI.API.Controllers
             await _auditService.LogActionAsync("JobTypes", "Delete", $"Deleted JobType {jobType.Name}", null, null, userId);
 
             return Ok(new { success = true, message = "JobType deleted" });
-        }
-            return NotFound(new { success = false, error = "JobType not found or delete error" });
         }
     }
 }
