@@ -44,6 +44,13 @@ API REST in .NET 8 con Entity Framework Core per gestione multi-tenant.
 
 ---
 
+## 📚 API Documentation
+
+Detailed documentation for all API endpoints, including request and response examples, can be found here:
+👉 **[API Documentation](backend/WorkBotAI.API/API_DOCUMENTATION.md)**
+
+---
+
 ## 🏗️ Architettura Prevista
 
 ```
