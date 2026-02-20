@@ -3,7 +3,7 @@
 Welcome to the WorkBotAI API documentation. This document provides detailed information about the available REST endpoints, including request formats, response samples, and authentication details.
 
 ## Base URL
-The API is available at: `https://localhost:5001/api` (default development URL)
+The API is available at: `https://www.geordie.app:441/WorkbotAI_API/api` (default development URL)
 
 ## Authentication
 Most endpoints require a Bearer JWT token. Obtain a token by calling the `/Auth/login` endpoint.
