@@ -9,7 +9,6 @@ using WorkBotAI.Repositories.DataAccess;
 using WorkBotAI.API.Services;
 using WorkBotAI.Repositories.DataAccess.Repositories.Interfaces;
 using WorkBotAI.Repositories.DataAccess.Repositories.Implementations;
-using WorkBotAI.API.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +20,10 @@ builder.Services.AddControllers(options =>
         .Build();
     options.Filters.Add(new AuthorizeFilter(policy));
     options.Filters.Add<LogActionFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

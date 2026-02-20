@@ -27,7 +27,13 @@ namespace WorkBotAI.API.Controllers
         public async Task<ActionResult> GetCategories()
         {
             var categories = await _repository.GetAllAsync();
-            return Ok(new { success = true, data = categories });
+            var dtos = categories.Select(c => new CategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                IsActive = c.IsActive ?? false
+            });
+            return Ok(new { success = true, data = dtos });
         }
 
         [HttpGet("{id}")]
@@ -35,7 +41,13 @@ namespace WorkBotAI.API.Controllers
         {
             var category = await _repository.GetByIdAsync(id);
             if (category == null) return NotFound(new { success = false, error = "Category not found" });
-            return Ok(new { success = true, data = category });
+            var dto = new CategoryDto
+            {
+                Id = category.Id,
+                Name = category.Name,
+                IsActive = category.IsActive ?? false
+            };
+            return Ok(new { success = true, data = dto });
         }
 
         [HttpPost]

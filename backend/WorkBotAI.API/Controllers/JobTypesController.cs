@@ -27,7 +27,15 @@ namespace WorkBotAI.API.Controllers
         public async Task<ActionResult> GetJobTypes()
         {
             var jobTypes = await _repository.GetAllAsync();
-            return Ok(new { success = true, data = jobTypes });
+            var dtos = jobTypes.Select(j => new JobTypeDto
+            {
+                Id = j.Id,
+                Name = j.Name,
+                IsActive = j.IsActive ?? false,
+                CategoryId = j.CategoryId,
+                Gender = j.Gender
+            });
+            return Ok(new { success = true, data = dtos });
         }
 
         [HttpGet("{id}")]
@@ -35,7 +43,15 @@ namespace WorkBotAI.API.Controllers
         {
             var jobType = await _repository.GetByIdAsync(id);
             if (jobType == null) return NotFound(new { success = false, error = "JobType not found" });
-            return Ok(new { success = true, data = jobType });
+            var dto = new JobTypeDto
+            {
+                Id = jobType.Id,
+                Name = jobType.Name,
+                IsActive = jobType.IsActive ?? false,
+                CategoryId = jobType.CategoryId,
+                Gender = jobType.Gender
+            };
+            return Ok(new { success = true, data = dto });
         }
 
         [HttpPost]
